@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDF Text Extractor – Extract Text from PDF Online, Privately</title>
+<meta name="description" content="Extract text from any PDF directly in your browser. No uploads, no servers, 100% private.">
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --border: #e3e6eb;
+    --text: #1f2430;
+    --muted: #6b7280;
+    --accent: #e5322d;
+    --accent-dark: #c92721;
+    --accent-soft: #fdeceb;
+    --ok: #15803d;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+  }
+  a { color: var(--accent); }
+
+  /* Navbar */
+  .navbar {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .navbar-inner {
+    max-width: 1080px; margin: 0 auto; padding: 0 20px;
+    height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .brand { font-weight: 800; font-size: 1.25rem; color: var(--text); text-decoration: none; letter-spacing: -0.02em; }
+  .brand span { color: var(--accent); }
+  .nav-links { display: flex; gap: 6px; }
+  .nav-links a {
+    color: var(--text); text-decoration: none; font-weight: 600; font-size: .92rem;
+    padding: 8px 14px; border-radius: 8px;
+  }
+  .nav-links a:hover { background: var(--bg); }
+  .nav-links a:focus-visible, .btn:focus-visible, .drop:focus-visible, input:focus-visible, textarea:focus-visible {
+    outline: 3px solid rgba(229,50,45,.35); outline-offset: 2px;
+  }
+
+  /* Layout */
+  main { max-width: 1080px; margin: 0 auto; padding: 36px 20px 60px; }
+  .hero { text-align: center; margin-bottom: 28px; }
+  .hero h1 { font-size: clamp(1.7rem, 4vw, 2.4rem); margin: 0 0 8px; letter-spacing: -0.02em; }
+  .hero p { margin: 0 auto; max-width: 620px; color: var(--muted); font-size: 1.05rem; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 2px rgba(16,24,40,.04);
+  }
+  .card h2 { margin: 0 0 14px; font-size: 1.15rem; letter-spacing: -0.01em; }
+
+  /* Drop zone */
+  .drop {
+    border: 2px dashed #cfd4dc; border-radius: var(--radius);
+    background: #fafbfc; padding: 40px 20px; text-align: center; cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+  .drop svg { width: 44px; height: 44px; color: var(--accent); }
+  .drop .big { font-weight: 700; font-size: 1.1rem; margin: 10px 0 4px; }
+  .drop .small { color: var(--muted); font-size: .9rem; }
+  .privacy-note { margin-top: 12px; font-size: .85rem; color: var(--muted); text-align: center; }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font: inherit; font-weight: 700; font-size: .95rem; cursor: pointer;
+    padding: 11px 20px; border-radius: 10px; border: 1px solid var(--border);
+    background: #fff; color: var(--text); transition: background .15s, border-color .15s;
+  }
+  .btn:hover:not(:disabled) { background: var(--bg); border-color: #cfd4dc; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover:not(:disabled) { background: var(--accent-dark); border-color: var(--accent-dark); }
+
+  /* File info */
+  .file-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .file-meta { min-width: 0; }
+  .file-name { font-weight: 700; word-break: break-all; }
+  .file-sub { color: var(--muted); font-size: .9rem; }
+  .pill {
+    display: inline-block; background: var(--accent-soft); color: var(--accent-dark);
+    font-weight: 700; font-size: .82rem; padding: 3px 10px; border-radius: 999px; margin-left: 6px;
+  }
+
+  /* Options */
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  label.field { display: block; font-weight: 600; font-size: .92rem; margin-bottom: 6px; }
+  input[type="text"] {
+    width: 100%; font: inherit; padding: 10px 12px; border: 1px solid var(--border);
+    border-radius: 10px; background: #fff; color: var(--text);
+  }
+  .hint { color: var(--muted); font-size: .83rem; margin-top: 6px; }
+  .check { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-weight: 600; font-size: .92rem; padding-top: 2px; }
+  .check input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--accent); }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 20px; }
+
+  /* Progress & messages */
+  .progress { height: 8px; background: var(--bg); border-radius: 999px; overflow: hidden; margin-top: 16px; display: none; }
+  .progress.show { display: block; }
+  .progress > div { height: 100%; width: 0; background: var(--accent); transition: width .1s; }
+  .msg { margin-top: 14px; padding: 10px 14px; border-radius: 10px; font-size: .92rem; display: none; }
+  .msg.show { display: block; }
+  .msg.error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+  .msg.warn { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+  .msg.ok { background: #f0fdf4; color: var(--ok); border: 1px solid #bbf7d0; }
+
+  /* Output */
+  .out-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .out-head h2 { margin: 0; }
+  .counts { color: var(--muted); font-size: .9rem; font-weight: 600; }
+  textarea {
+    width: 100%; min-height: 320px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .9rem; line-height: 1.55; padding: 14px; border: 1px solid var(--border);
+    border-radius: 10px; background: #fafbfc; color: var(--text);
+  }
+
+  /* Info */
+  .steps { margin: 0; padding-left: 20px; }
+  .steps li { margin-bottom: 8px; }
+  details { border-top: 1px solid var(--border); padding: 14px 0; }
+  details:first-of-type { border-top: 0; padding-top: 0; }
+  details:last-child { padding-bottom: 0; }
+  summary { cursor: pointer; font-weight: 700; }
+  details p { margin: 8px 0 0; color: var(--muted); }
+
+  footer { text-align: center; color: var(--muted); font-size: .85rem; padding: 0 20px 40px; }
+
+  @media (max-width: 720px) {
+    .options { grid-template-columns: 1fr; }
+    .card { padding: 18px; }
+    .nav-links a { padding: 8px 10px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+
+<nav class="navbar" aria-label="Main">
+  <div class="navbar-inner">
+    <a class="brand" href="index.html">Burl<span>PDF</span></a>
+    <div class="nav-links">
+      <a href="index.html">&larr; Back to all tools</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <section class="hero">
+    <h1>PDF Text Extractor</h1>
+    <p>Pull the text out of any PDF in seconds. Everything runs in your browser, so your file never leaves your device.</p>
+  </section>
+
+  <!-- Upload -->
+  <section class="card" id="uploadCard">
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose a PDF file or drop it here">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6"/><path d="m9.5 13.5 2.5-2.5 2.5 2.5"/>
+      </svg>
+      <div class="big">Drop your PDF here or click to browse</div>
+      <div class="small">One PDF file at a time</div>
+    </div>
+    <input type="file" id="fileInput" accept="application/pdf,.pdf" hidden>
+    <div class="privacy-note">Private by design: text extraction happens locally with no server upload.</div>
+    <div class="msg" id="uploadMsg" role="alert"></div>
+  </section>
+
+  <!-- Options -->
+  <section class="card" id="optionsCard" style="display:none">
+    <div class="file-row">
+      <div class="file-meta">
+        <div class="file-name" id="fileName"></div>
+        <div class="file-sub"><span id="fileSize"></span><span class="pill" id="pageCount"></span></div>
+      </div>
+      <button class="btn" id="changeBtn" type="button">Choose another file</button>
+    </div>
+    <hr style="border:0;border-top:1px solid var(--border);margin:20px 0">
+    <div class="options">
+      <div>
+        <label class="field" for="range">Page range</label>
+        <input type="text" id="range" placeholder="e.g. 1-5, 8, 10-12 (leave blank for all pages)" autocomplete="off">
+        <div class="hint">Leave blank to extract every page.</div>
+      </div>
+      <div>
+        <label class="check" for="markers">
+          <input type="checkbox" id="markers" checked>
+          <span>Include page markers<br><span class="hint" style="font-weight:400">Adds lines like &ldquo;--- Page 1 ---&rdquo; between pages.</span></span>
+        </label>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="extractBtn" type="button">Extract text</button>
+    </div>
+    <div class="progress" id="progress" aria-hidden="true"><div id="bar"></div></div>
+    <div class="msg" id="optMsg" role="alert"></div>
+  </section>
+
+  <!-- Output -->
+  <section class="card" id="outputCard" style="display:none">
+    <div class="out-head">
+      <h2>Extracted text</h2>
+      <div class="counts" id="counts">0 characters &middot; 0 words</div>
+    </div>
+    <textarea id="output" aria-label="Extracted text" spellcheck="false"></textarea>
+    <div class="actions">
+      <button class="btn primary" id="copyBtn" type="button">Copy Text</button>
+      <button class="btn" id="downloadBtn" type="button">Download .TXT</button>
+    </div>
+    <div class="msg" id="outMsg" role="status"></div>
+  </section>
+
+  <!-- How it works -->
+  <section class="card">
+    <h2>How it works</h2>
+    <ol class="steps">
+      <li><strong>Add your PDF.</strong> Drag it onto the box above or pick it from your device.</li>
+      <li><strong>Choose what to extract.</strong> Use every page, or type a range such as <code>1-5</code> or <code>2, 4, 7-9</code>.</li>
+      <li><strong>Extract and save.</strong> Copy the text or download it as a .txt file.</li>
+    </ol>
+    <p class="hint" style="margin-top:14px">The PDF is read by pdf.js inside your browser tab. Nothing is sent to a server.</p>
+  </section>
+
+  <!-- FAQ -->
+  <section class="card">
+    <h2>FAQ</h2>
+    <details>
+      <summary>Is my PDF uploaded anywhere?</summary>
+      <p>No. The file is processed entirely on your device. Only the pdf.js library itself is downloaded from a CDN when the page loads.</p>
+    </details>
+    <details>
+      <summary>Why is the result empty for my PDF?</summary>
+      <p>Scanned PDFs and photos of documents contain images of text, not real text. This tool reads embedded text only, so those files need OCR software first.</p>
+    </details>
+    <details>
+      <summary>Can I extract only certain pages?</summary>
+      <p>Yes. Enter pages and ranges separated by commas, like <code>1-3, 7, 10-12</code>. Leave the field blank to extract everything.</p>
+    </details>
+    <details>
+      <summary>Why is the line spacing or order a little off?</summary>
+      <p>PDFs store text as positioned fragments rather than paragraphs. The tool rebuilds lines from those positions, which works well for most documents but can be imperfect with columns and tables.</p>
+    </details>
+    <details>
+      <summary>Does it work with password-protected PDFs?</summary>
+      <p>Files that need a password to open are not supported. Remove the password first, then try again.</p>
+    </details>
+    <details>
+      <summary>Is there a file size limit?</summary>
+      <p>There is no fixed limit. Very large PDFs depend on your device's memory and may take longer to process.</p>
+    </details>
+  </section>
+</main>
+
+<footer>Runs 100% in your browser. No uploads, no tracking.</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var drop = $('drop'), fileInput = $('fileInput');
+  var optionsCard = $('optionsCard'), outputCard = $('outputCard');
+  var rangeInput = $('range'), markers = $('markers');
+  var extractBtn = $('extractBtn'), changeBtn = $('changeBtn');
+  var copyBtn = $('copyBtn'), downloadBtn = $('downloadBtn');
+  var output = $('output'), counts = $('counts');
+  var progress = $('progress'), bar = $('bar');
+
+  var pdfDoc = null, currentFileName = 'extracted-text';
+
+  if (typeof pdfjsLib === 'undefined') {
+    showMsg('uploadMsg', 'error', 'The PDF engine could not be loaded. Check your internet connection and reload the page.');
+    return;
+  }
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  function showMsg(id, type, text) {
+    var el = $(id);
+    el.className = 'msg show ' + type;
+    el.textContent = text;
+  }
+  function hideMsg(id) { var el = $(id); el.className = 'msg'; el.textContent = ''; }
+
+  function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(2) + ' MB';
+  }
+
+  /* ---------- File selection ---------- */
+  drop.addEventListener('click', function () { fileInput.click(); });
+  drop.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+  });
+  changeBtn.addEventListener('click', function () { fileInput.click(); });
+  fileInput.addEventListener('change', function () {
+    if (fileInput.files && fileInput.files[0]) handleFile(fileInput.files[0]);
+    fileInput.value = '';
+  });
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('over'); });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('over'); });
+  });
+  drop.addEventListener('drop', function (e) {
+    var files = e.dataTransfer && e.dataTransfer.files;
+    if (!files || !files.length) return;
+    if (files.length > 1) showMsg('uploadMsg', 'warn', 'Only one file can be processed at a time. Using the first PDF.');
+    handleFile(files[0]);
+  });
+  // Prevent the browser from opening a PDF dropped outside the zone
+  window.addEventListener('dragover', function (e) { e.preventDefault(); });
+  window.addEventListener('drop', function (e) { e.preventDefault(); });
+
+  function handleFile(file) {
+    hideMsg('uploadMsg'); hideMsg('optMsg'); hideMsg('outMsg');
+    var isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+    if (!isPdf) { showMsg('uploadMsg', 'error', 'That file is not a PDF. Please choose a .pdf file.'); return; }
+
+    outputCard.style.display = 'none';
+    output.value = '';
+    showMsg('uploadMsg', 'ok', 'Reading PDF…');
+
+    var reader = new FileReader();
+    reader.onerror = function () { showMsg('uploadMsg', 'error', 'The file could not be read. Please try again.'); };
+    reader.onload = function () {
+      var task = pdfjsLib.getDocument({ data: new Uint8Array(reader.result) });
+      task.promise.then(function (doc) {
+        if (pdfDoc) { try { pdfDoc.destroy(); } catch (e) {} }
+        pdfDoc = doc;
+        currentFileName = file.name.replace(/\.pdf$/i, '') || 'extracted-text';
+        $('fileName').textContent = file.name;
+        $('fileSize').textContent = formatSize(file.size);
+        $('pageCount').textContent = doc.numPages + (doc.numPages === 1 ? ' page' : ' pages');
+        rangeInput.value = '';
+        rangeInput.placeholder = 'e.g. 1-5, 8, 10-12 (leave blank for all ' + doc.numPages + ')';
+        hideMsg('uploadMsg');
+        optionsCard.style.display = '';
+        optionsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }).catch(function (err) {
+        pdfDoc = null;
+        optionsCard.style.display = 'none';
+        var name = err && err.name;
+        if (name === 'PasswordException') showMsg('uploadMsg', 'error', 'This PDF is password-protected. Remove the password and try again.');
+        else if (name === 'InvalidPDFException') showMsg('uploadMsg', 'error', 'This file looks damaged or is not a valid PDF.');
+        else showMsg('uploadMsg', 'error', 'Could not open this PDF. ' + (err && err.message ? err.message : ''));
+      });
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  /* ---------- Page range parsing ---------- */
+  function parseRange(str, total) {
+    str = (str || '').trim();
+    if (!str) {
+      var all = [];
+      for (var i = 1; i <= total; i++) all.push(i);
+      return { pages: all };
+    }
+    var seen = {}, pages = [];
+    var parts = str.split(',');
+    for (var p = 0; p < parts.length; p++) {
+      var part = parts[p].trim();
+      if (!part) continue;
+      var m = part.match(/^(\d+)\s*(?:[-–]\s*(\d+))?$/);
+      if (!m) return { error: 'Invalid range "' + part + '". Use numbers like 1-5, 8, 10-12.' };
+      var a = parseInt(m[1], 10), b = m[2] ? parseInt(m[2], 10) : a;
+      if (a < 1 || b < 1) return { error: 'Page numbers start at 1.' };
+      if (a > b) return { error: 'Range "' + part + '" is backwards. Write it as ' + b + '-' + a + '.' };
+      if (b > total) return { error: 'Page ' + b + ' is out of range. This PDF has ' + total + (total === 1 ? ' page.' : ' pages.') };
+      for (var n = a; n <= b; n++) { if (!seen[n]) { seen[n] = true; pages.push(n); } }
+    }
+    if (!pages.length) return { error: 'Enter a page range or leave the field blank for all pages.' };
+    pages.sort(function (x, y) { return x - y; });
+    return { pages: pages };
+  }
+
+  /* ---------- Text extraction ---------- */
+  function pageToText(textContent) {
+    var out = '', lastY = null, lastX = null, lastW = 0;
+    textContent.items.forEach(function (item) {
+      if (typeof item.str !== 'string') return;
+      var x = item.transform[4], y = item.transform[5];
+      if (lastY !== null) {
+        var lineGap = Math.abs(y - lastY);
+        var h = item.height || 10;
+        if (lineGap > h * 0.5) {
+          out += '\n';
+        } else if (lastX !== null && x - (lastX + lastW) > h * 0.15 && !/\s$/.test(out) && !/^\s/.test(item.str)) {
+          out += ' ';
+        }
+      }
+      out += item.str;
+      if (item.hasEOL) out += '\n';
+      lastY = y; lastX = x; lastW = item.width || 0;
+    });
+    return out.replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
+
+  extractBtn.addEventListener('click', async function () {
+    if (!pdfDoc) return;
+    hideMsg('optMsg'); hideMsg('outMsg');
+    var parsed = parseRange(rangeInput.value, pdfDoc.numPages);
+    if (parsed.error) { showMsg('optMsg', 'error', parsed.error); return; }
+
+    var pages = parsed.pages, parts = [], emptyPages = 0;
+    extractBtn.disabled = true; extractBtn.textContent = 'Extracting…';
+    progress.classList.add('show'); bar.style.width = '0%';
+
+    try {
+      for (var i = 0; i < pages.length; i++) {
+        var page = await pdfDoc.getPage(pages[i]);
+        var content = await page.getTextContent();
+        var text = pageToText(content);
+        if (!text) emptyPages++;
+        parts.push(markers.checked ? '--- Page ' + pages[i] + ' ---\n' + text : text);
+        page.cleanup();
+        bar.style.width = Math.round(((i + 1) / pages.length) * 100) + '%';
+      }
+      output.value = parts.join('\n\n');
+      updateCounts();
+      outputCard.style.display = '';
+      outputCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      if (!output.value.replace(/--- Page \d+ ---/g, '').trim()) {
+        showMsg('optMsg', 'warn', 'No text was found. This PDF may be a scan or image-based file that needs OCR.');
+      } else if (emptyPages > 0) {
+        showMsg('optMsg', 'warn', emptyPages + (emptyPages === 1 ? ' page' : ' pages') + ' had no extractable text (possibly scanned or image-only).');
+      } else {
+        showMsg('optMsg', 'ok', 'Extracted ' + pages.length + (pages.length === 1 ? ' page.' : ' pages.'));
+      }
+    } catch (err) {
+      showMsg('optMsg', 'error', 'Extraction failed. ' + (err && err.message ? err.message : 'Please try again.'));
+    } finally {
+      extractBtn.disabled = false; extractBtn.textContent = 'Extract text';
+      setTimeout(function () { progress.classList.remove('show'); }, 400);
+    }
+  });
+
+  /* ---------- Output actions ---------- */
+  function updateCounts() {
+    var t = output.value;
+    var trimmed = t.trim();
+    var words = trimmed ? trimmed.split(/\s+/).length : 0;
+    counts.textContent = t.length.toLocaleString() + ' characters · ' + words.toLocaleString() + ' words';
+  }
+  output.addEventListener('input', updateCounts);
+
+  copyBtn.addEventListener('click', async function () {
+    if (!output.value) { showMsg('outMsg', 'warn', 'There is no text to copy yet.'); return; }
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(output.value);
+      } else {
+        output.select(); document.execCommand('copy'); output.setSelectionRange(0, 0);
+      }
+      showMsg('outMsg', 'ok', 'Text copied to clipboard.');
+    } catch (e) {
+      output.select();
+      showMsg('outMsg', 'warn', 'Automatic copy was blocked. The text is selected, so press Ctrl+C (Cmd+C on Mac).');
+    }
+    setTimeout(function () { hideMsg('outMsg'); }, 3500);
+  });
+
+  downloadBtn.addEventListener('click', function () {
+    if (!output.value) { showMsg('outMsg', 'warn', 'There is no text to download yet.'); return; }
+    var blob = new Blob([output.value], { type: 'text/plain;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = currentFileName + '.txt';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    showMsg('outMsg', 'ok', 'Download started.');
+    setTimeout(function () { hideMsg('outMsg'); }, 3500);
+  });
+})();
+</script>
+</body>
+</html>

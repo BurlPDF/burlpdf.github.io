@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QR Code Generator – Free, Private, Runs in Your Browser</title>
+<meta name="description" content="Create QR codes for text, links, Wi-Fi and UPI payments. Everything is generated in your browser. Nothing is uploaded.">
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --border: #e3e6ea;
+    --text: #2f3640;
+    --muted: #6b7380;
+    --accent: #e5322d;
+    --accent-dark: #c92621;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+  }
+  .nav {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .nav-inner {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 20px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand { font-weight: 700; font-size: 1.15rem; color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+  .brand-dot { width: 22px; height: 22px; border-radius: 6px; background: var(--accent); display: inline-block; }
+  .nav a.back { color: var(--muted); text-decoration: none; font-weight: 600; font-size: .95rem; padding: 8px 12px; border-radius: 8px; }
+  .nav a.back:hover { background: var(--bg); color: var(--text); }
+  main { max-width: 1080px; margin: 0 auto; padding: 36px 20px 64px; }
+  h1 { font-size: 2rem; margin: 0 0 6px; text-align: center; }
+  .sub { text-align: center; color: var(--muted); margin: 0 auto 28px; max-width: 560px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+  .tool { display: grid; grid-template-columns: 1.15fr 1fr; gap: 20px; align-items: start; }
+  .tabs { display: flex; gap: 6px; background: var(--bg); padding: 5px; border-radius: 10px; margin-bottom: 20px; }
+  .tab { flex: 1; border: 0; background: transparent; padding: 10px 8px; border-radius: 8px; font: inherit; font-weight: 600; color: var(--muted); cursor: pointer; }
+  .tab:hover { color: var(--text); }
+  .tab[aria-selected="true"] { background: #fff; color: var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  label { display: block; font-weight: 600; font-size: .9rem; margin: 14px 0 6px; }
+  label:first-child { margin-top: 0; }
+  input[type=text], input[type=password], input[type=number], textarea, select {
+    width: 100%; padding: 11px 12px; border: 1px solid var(--border); border-radius: 10px;
+    font: inherit; color: var(--text); background: #fff;
+  }
+  textarea { min-height: 110px; resize: vertical; }
+  input:focus, textarea:focus, select:focus, .tab:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent);
+  }
+  .check { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-weight: 500; font-size: .92rem; }
+  .check input { width: 18px; height: 18px; accent-color: var(--accent); }
+  .panel[hidden] { display: none; }
+  .hint { color: var(--muted); font-size: .84rem; margin: 6px 0 0; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .colors { border-top: 1px solid var(--border); margin-top: 22px; padding-top: 6px; }
+  .color-field { display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); border-radius: 10px; padding: 6px 10px; background: #fff; }
+  .color-field input[type=color] { width: 38px; height: 32px; border: 0; padding: 0; background: none; cursor: pointer; }
+  .color-field span { font-family: ui-monospace, Consolas, monospace; font-size: .9rem; color: var(--muted); }
+  .preview { text-align: center; position: sticky; top: 80px; }
+  .preview h2 { font-size: 1.05rem; margin: 0 0 14px; }
+  #qrFrame {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 100%; max-width: 300px; aspect-ratio: 1; padding: 18px;
+    border: 1px solid var(--border); border-radius: 12px; background: #fff;
+  }
+  #qr img, #qr canvas { display: block; max-width: 100%; height: auto; }
+  #empty { color: var(--muted); font-size: .92rem; padding: 0 12px; }
+  #msg { min-height: 22px; margin: 12px 0 0; font-size: .88rem; color: var(--muted); }
+  #msg.error { color: var(--accent-dark); font-weight: 600; }
+  .btn {
+    width: 100%; margin-top: 10px; padding: 13px 16px; border: 0; border-radius: 10px;
+    background: var(--accent); color: #fff; font: inherit; font-weight: 700; font-size: 1rem; cursor: pointer;
+  }
+  .btn:hover:not(:disabled) { background: var(--accent-dark); }
+  .btn:disabled { background: #d5d8dd; color: #8a919c; cursor: not-allowed; }
+  .privacy { margin-top: 14px; font-size: .82rem; color: var(--muted); }
+  section.info { margin-top: 28px; }
+  section.info h2 { margin: 0 0 16px; font-size: 1.35rem; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .step { border: 1px solid var(--border); border-radius: 12px; padding: 16px; background: var(--bg); }
+  .step h3 { margin: 0 0 6px; font-size: 1rem; }
+  .step p { margin: 0; color: var(--muted); font-size: .93rem; }
+  details { border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; background: #fff; }
+  summary { cursor: pointer; padding: 14px 16px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; color: var(--accent); font-size: 1.3rem; line-height: 1; }
+  details[open] summary::after { content: "–"; }
+  details p { margin: 0; padding: 0 16px 16px; color: var(--muted); }
+  footer { text-align: center; color: var(--muted); font-size: .85rem; padding: 0 20px 32px; }
+  @media (max-width: 820px) {
+    .tool { grid-template-columns: 1fr; }
+    .preview { position: static; }
+    .steps { grid-template-columns: 1fr; }
+    h1 { font-size: 1.6rem; }
+  }
+  @media (max-width: 480px) {
+    .row { grid-template-columns: 1fr; }
+    .tab { font-size: .85rem; padding: 10px 4px; }
+    .card { padding: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html"><span class="brand-dot"></span>BurlPDF</a>
+    <a class="back" href="index.html">&larr; Back to all tools</a>
+  </div>
+</header>
+
+<main>
+  <h1>QR Code Generator</h1>
+  <p class="sub">Make a QR code for a link, text, Wi-Fi network or UPI payment. It is created on your device and never uploaded.</p>
+
+  <div class="tool">
+    <div class="card">
+      <div class="tabs" role="tablist" aria-label="QR code type">
+        <button class="tab" role="tab" id="tab-text" data-mode="text" aria-selected="true">Text / URL</button>
+        <button class="tab" role="tab" id="tab-wifi" data-mode="wifi" aria-selected="false">Wi-Fi</button>
+        <button class="tab" role="tab" id="tab-upi" data-mode="upi" aria-selected="false">UPI</button>
+      </div>
+
+      <div class="panel" id="panel-text">
+        <label for="text">Text or URL</label>
+        <textarea id="text" placeholder="https://example.com"></textarea>
+        <p class="hint">Paste a link, a phone number, or any text up to a few hundred characters.</p>
+      </div>
+
+      <div class="panel" id="panel-wifi" hidden>
+        <label for="ssid">Network name (SSID)</label>
+        <input type="text" id="ssid" autocomplete="off" placeholder="Home-WiFi">
+        <label for="sec">Security type</label>
+        <select id="sec">
+          <option value="WPA">WPA / WPA2 / WPA3</option>
+          <option value="WEP">WEP</option>
+          <option value="nopass">None (open network)</option>
+        </select>
+        <div id="passWrap">
+          <label for="pass">Password</label>
+          <input type="password" id="pass" autocomplete="off" placeholder="Network password">
+          <label class="check" for="showPass"><input type="checkbox" id="showPass"> Show password</label>
+        </div>
+        <label class="check" for="hidden"><input type="checkbox" id="hidden"> Hidden network</label>
+      </div>
+
+      <div class="panel" id="panel-upi" hidden>
+        <label for="upiId">UPI ID</label>
+        <input type="text" id="upiId" autocomplete="off" placeholder="name@bank">
+        <div class="row">
+          <div>
+            <label for="upiName">Payee name</label>
+            <input type="text" id="upiName" autocomplete="off" placeholder="Your name or shop">
+          </div>
+          <div>
+            <label for="upiAmt">Amount in ₹ (optional)</label>
+            <input type="number" id="upiAmt" min="0" step="0.01" inputmode="decimal" placeholder="500">
+          </div>
+        </div>
+        <label for="upiNote">Note (optional)</label>
+        <input type="text" id="upiNote" autocomplete="off" placeholder="Invoice 1042">
+        <p class="hint">Works with any UPI app, such as Google Pay, PhonePe and Paytm.</p>
+      </div>
+
+      <div class="colors">
+        <div class="row">
+          <div>
+            <label for="fg">Foreground color</label>
+            <div class="color-field"><input type="color" id="fg" value="#000000"><span id="fgVal">#000000</span></div>
+          </div>
+          <div>
+            <label for="bg">Background color</label>
+            <div class="color-field"><input type="color" id="bg" value="#ffffff"><span id="bgVal">#ffffff</span></div>
+          </div>
+        </div>
+        <label for="ecc">Error correction</label>
+        <select id="ecc">
+          <option value="L">Low (7%) – smallest code</option>
+          <option value="M" selected>Medium (15%) – recommended</option>
+          <option value="Q">Quartile (25%)</option>
+          <option value="H">High (30%) – most damage-resistant</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card preview">
+      <h2>Live preview</h2>
+      <div id="qrFrame">
+        <div id="qr"></div>
+        <div id="empty">Type something on the left and your QR code appears here.</div>
+      </div>
+      <p id="msg" role="status" aria-live="polite"></p>
+      <button class="btn" id="download" disabled>Download PNG</button>
+      <p class="privacy">100% local. Your data never leaves this browser tab.</p>
+    </div>
+  </div>
+
+  <section class="card info" id="how">
+    <h2>How it works</h2>
+    <div class="steps">
+      <div class="step"><h3>1. Choose a type</h3><p>Pick Text / URL, Wi-Fi or UPI, then fill in the fields. Wi-Fi and UPI codes are formatted for you.</p></div>
+      <div class="step"><h3>2. Style it</h3><p>Set the foreground and background colors. Keep the foreground darker than the background so phones can read it.</p></div>
+      <div class="step"><h3>3. Download</h3><p>The preview updates as you type. When it looks right, click Download PNG for a sharp 1024 px image.</p></div>
+    </div>
+  </section>
+
+  <section class="card info" id="faq">
+    <h2>Frequently asked questions</h2>
+    <details>
+      <summary>Is my data uploaded anywhere?</summary>
+      <p>No. The QR code is drawn by JavaScript running in your browser. Your text, Wi-Fi password and UPI details are never sent to a server. The only thing fetched from the internet is the small QR library when the page loads.</p>
+    </details>
+    <details>
+      <summary>Do the QR codes expire?</summary>
+      <p>No. The data is stored directly inside the image, so the code works for as long as the content it points to stays valid. There are no accounts, limits or tracking links.</p>
+    </details>
+    <details>
+      <summary>Will a Wi-Fi QR code work on my phone?</summary>
+      <p>Yes. The camera on current iPhones and most Android phones can scan a Wi-Fi code and offer to join the network. Make sure the security type matches your router settings.</p>
+    </details>
+    <details>
+      <summary>Can I use the UPI code to receive payments?</summary>
+      <p>Yes. Scanning it opens a UPI app with your UPI ID and name filled in. If you add an amount, it is pre-filled for the payer. Test with a small payment before printing it for customers.</p>
+    </details>
+    <details>
+      <summary>Which colors scan best?</summary>
+      <p>Use a dark foreground on a light background, such as black on white. Inverted codes (light on dark) and low-contrast colors may fail on some scanners.</p>
+    </details>
+    <details>
+      <summary>What does error correction do?</summary>
+      <p>Higher levels let the code stay readable even if part of it is smudged or covered, but they make the pattern denser. Medium suits most uses. Choose High for printed codes that may get worn.</p>
+    </details>
+  </section>
+</main>
+
+<footer>Generated entirely in your browser.</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var mode = 'text';
+  var timer = null;
+
+  function wifiEscape(s) { return s.replace(/([\\;,:"])/g, '\\$1'); }
+
+  function getData() {
+    if (mode === 'text') {
+      return { value: $('text').value.trim() };
+    }
+    if (mode === 'wifi') {
+      var ssid = $('ssid').value;
+      if (!ssid) return { value: '' };
+      var sec = $('sec').value;
+      var s = 'WIFI:T:' + sec + ';S:' + wifiEscape(ssid) + ';';
+      if (sec !== 'nopass') s += 'P:' + wifiEscape($('pass').value) + ';';
+      if ($('hidden').checked) s += 'H:true;';
+      return { value: s + ';' };
+    }
+    var id = $('upiId').value.trim();
+    if (!id) return { value: '' };
+    if (!/^[A-Za-z0-9._-]{2,}@[A-Za-z][A-Za-z0-9.-]{1,}$/.test(id)) {
+      return { value: '', error: 'Enter a valid UPI ID, for example name@bank.' };
+    }
+    var p = 'upi://pay?pa=' + encodeURIComponent(id);
+    var name = $('upiName').value.trim();
+    if (name) p += '&pn=' + encodeURIComponent(name);
+    var amt = $('upiAmt').value.trim();
+    if (amt) {
+      if (!/^\d+(\.\d{1,2})?$/.test(amt) || parseFloat(amt) <= 0) {
+        return { value: '', error: 'Enter an amount greater than 0 with up to 2 decimals.' };
+      }
+      p += '&am=' + amt;
+    }
+    var note = $('upiNote').value.trim();
+    if (note) p += '&tn=' + encodeURIComponent(note);
+    return { value: p + '&cu=INR' };
+  }
+
+  function luminance(hex) {
+    var n = parseInt(hex.slice(1), 16);
+    var c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(function (v) {
+      v /= 255;
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  }
+
+  function contrastWarning(fg, bg) {
+    var a = luminance(fg), b = luminance(bg);
+    var ratio = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    if (a > b) return 'Tip: the foreground is lighter than the background. Some scanners cannot read inverted codes.';
+    if (ratio < 3) return 'Tip: low contrast. This code may be hard to scan.';
+    return '';
+  }
+
+  function setMsg(text, isError) {
+    var m = $('msg');
+    m.textContent = text || '';
+    m.className = isError ? 'error' : '';
+  }
+
+  function render() {
+    var fg = $('fg').value, bg = $('bg').value;
+    $('fgVal').textContent = fg;
+    $('bgVal').textContent = bg;
+    var qr = $('qr');
+    qr.innerHTML = '';
+    $('qrFrame').style.background = bg;
+
+    var data = getData();
+    if (!data.value) {
+      $('empty').style.display = '';
+      $('empty').style.color = '';
+      $('download').disabled = true;
+      setMsg(data.error || '', !!data.error);
+      return;
+    }
+    try {
+      new QRCode(qr, {
+        text: data.value,
+        width: 256,
+        height: 256,
+        colorDark: fg,
+        colorLight: bg,
+        correctLevel: QRCode.CorrectLevel[$('ecc').value]
+      });
+      $('empty').style.display = 'none';
+      $('download').disabled = false;
+      setMsg(contrastWarning(fg, bg), false);
+    } catch (e) {
+      qr.innerHTML = '';
+      $('empty').style.display = '';
+      $('download').disabled = true;
+      setMsg('This content is too long for a QR code. Shorten it or lower the error correction level.', true);
+    }
+  }
+
+  function scheduleRender() {
+    clearTimeout(timer);
+    timer = setTimeout(render, 120);
+  }
+
+  function download() {
+    var data = getData();
+    if (!data.value) return;
+    var size = 1024, margin = 80;
+    var holder = document.createElement('div');
+    try {
+      new QRCode(holder, {
+        text: data.value,
+        width: size,
+        height: size,
+        colorDark: $('fg').value,
+        colorLight: $('bg').value,
+        correctLevel: QRCode.CorrectLevel[$('ecc').value]
+      });
+    } catch (e) {
+      setMsg('Could not create the PNG. The content may be too long.', true);
+      return;
+    }
+    var src = holder.querySelector('canvas');
+    var out = document.createElement('canvas');
+    out.width = out.height = size + margin * 2;
+    var ctx = out.getContext('2d');
+    ctx.fillStyle = $('bg').value;
+    ctx.fillRect(0, 0, out.width, out.height);
+    ctx.drawImage(src, margin, margin);
+    out.toBlob(function (blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'qr-code-' + mode + '.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    }, 'image/png');
+  }
+
+  function setMode(next) {
+    mode = next;
+    ['text', 'wifi', 'upi'].forEach(function (m) {
+      $('panel-' + m).hidden = m !== next;
+      $('tab-' + m).setAttribute('aria-selected', m === next ? 'true' : 'false');
+    });
+    render();
+  }
+
+  document.querySelectorAll('.tab').forEach(function (t) {
+    t.addEventListener('click', function () { setMode(t.getAttribute('data-mode')); });
+  });
+  ['text', 'ssid', 'pass', 'hidden', 'sec', 'upiId', 'upiName', 'upiAmt', 'upiNote', 'fg', 'bg', 'ecc']
+    .forEach(function (id) {
+      $(id).addEventListener('input', scheduleRender);
+      $(id).addEventListener('change', scheduleRender);
+    });
+  $('sec').addEventListener('change', function () {
+    $('passWrap').style.display = $('sec').value === 'nopass' ? 'none' : '';
+  });
+  $('showPass').addEventListener('change', function () {
+    $('pass').type = $('showPass').checked ? 'text' : 'password';
+  });
+  $('download').addEventListener('click', download);
+
+  if (typeof QRCode === 'undefined') {
+    setMsg('The QR library could not load. Check your internet connection and reload the page.', true);
+    $('download').disabled = true;
+  } else {
+    render();
+  }
+})();
+</script>
+</body>
+</html>

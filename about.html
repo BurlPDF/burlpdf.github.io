@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About This Toolset</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --border: #e3e5e9;
+    --text: #2f3640;
+    --muted: #6b7380;
+    --accent: #e5322d;
+    --accent-dark: #c42622;
+    --accent-soft: #fdecec;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { color: var(--accent-dark); }
+  a:focus-visible, button:focus-visible {
+    outline: 3px solid rgba(229, 50, 45, 0.45);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* Navbar */
+  .navbar {
+    background: #ffffff;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .navbar-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 1.15rem;
+    color: var(--text);
+  }
+  .brand:hover { color: var(--text); }
+  .brand-mark {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    font-size: 1rem;
+  }
+  .nav-links { display: flex; align-items: center; gap: 6px; }
+  .nav-links a {
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 8px 14px;
+    border-radius: 8px;
+  }
+  .nav-links a:hover { background: var(--bg); color: var(--text); }
+  .nav-links a.active { color: var(--accent); background: var(--accent-soft); }
+
+  /* Layout */
+  main {
+    flex: 1;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 20px 56px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    box-shadow: 0 1px 2px rgba(20, 25, 35, 0.04);
+  }
+  .stack { display: flex; flex-direction: column; gap: 20px; }
+
+  /* Hero */
+  .hero { padding: 40px 32px; text-align: center; }
+  .hero h1 { margin: 0 0 12px; font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.2; letter-spacing: -0.02em; }
+  .hero p { margin: 0 auto; max-width: 680px; font-size: 1.1rem; color: var(--muted); }
+  .badge {
+    display: inline-block;
+    background: var(--accent-soft);
+    color: var(--accent-dark);
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 5px 14px;
+    border-radius: 999px;
+    margin-bottom: 16px;
+  }
+  .btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
+  .btn {
+    display: inline-block;
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 12px 24px;
+    border-radius: 10px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    transition: background 0.15s ease;
+  }
+  .btn:hover { background: var(--accent-dark); color: #fff; }
+  .btn.secondary { background: #fff; color: var(--text); border-color: var(--border); }
+  .btn.secondary:hover { background: var(--bg); color: var(--text); }
+
+  h2 { margin: 0 0 12px; font-size: 1.4rem; letter-spacing: -0.01em; }
+  h3 { margin: 0 0 6px; font-size: 1.05rem; }
+  .card p { margin: 0 0 12px; max-width: 75ch; }
+  .card p:last-child { margin-bottom: 0; }
+  .muted { color: var(--muted); }
+
+  /* Grids */
+  .grid { display: grid; gap: 16px; }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .tile {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .tile p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+  .icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    background: var(--accent-soft);
+    display: grid;
+    place-items: center;
+    font-size: 1.4rem;
+    margin-bottom: 12px;
+  }
+
+  /* Category links */
+  a.tile { display: block; color: var(--text); transition: border-color 0.15s ease, background 0.15s ease; }
+  a.tile:hover { border-color: var(--accent); background: #fffafa; color: var(--text); }
+  a.tile h3 { color: var(--text); }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .tag {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 999px;
+  }
+
+  /* Flow */
+  .flow { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .flow li {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .flow .n {
+    flex: none;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: grid;
+    place-items: center;
+  }
+  .flow strong { display: block; }
+  .flow span { color: var(--muted); font-size: 0.95rem; }
+
+  .note {
+    margin-top: 16px;
+    background: #f0f7f1;
+    border: 1px solid #cfe6d3;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 0.95rem;
+  }
+
+  /* Footer */
+  footer { background: #fff; border-top: 1px solid var(--border); }
+  .footer-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .footer-links { display: flex; gap: 18px; flex-wrap: wrap; }
+  .footer-links a { color: var(--muted); font-weight: 600; font-size: 0.9rem; }
+  .footer-links a:hover { color: var(--accent); }
+  .footer-copy { color: var(--muted); font-size: 0.9rem; margin: 0; }
+
+  @media (max-width: 860px) {
+    .grid-3 { grid-template-columns: 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .navbar-inner { height: auto; padding: 10px 16px; flex-wrap: wrap; }
+    .card { padding: 20px; }
+    .hero { padding: 28px 20px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="navbar-inner">
+    <a class="brand" href="index.html" aria-label="Back to the home page">
+      <span class="brand-mark" aria-hidden="true">&#9889;</span>
+      <span>Toolset</span>
+    </a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="index.html">All tools</a>
+      <a href="about.html" class="active" aria-current="page">About</a>
+    </nav>
+  </div>
+</header>
+
+<main class="stack">
+
+  <section class="card hero">
+    <span class="badge">100% in your browser</span>
+    <h1>About This Toolset</h1>
+    <p>A collection of PDF, image, and data utilities that run entirely on your device. Your files are opened, processed, and saved in your browser, and they are never sent to a server.</p>
+    <div class="btn-row">
+      <a class="btn" href="index.html">Browse all tools</a>
+      <a class="btn secondary" href="#how-it-works">See how it works</a>
+    </div>
+  </section>
+
+  <section class="card" id="overview">
+    <h2>Overview</h2>
+    <p>This toolset brings everyday file utilities into one place: working with PDFs, editing and converting images, and cleaning up data and text. Each tool is built with standard web technologies and runs inside the browser tab you already have open.</p>
+    <p>Most online file tools work by uploading your document to a remote server, processing it there, and sending a result back. That means your contracts, scans, photos, and spreadsheets pass through infrastructure you do not control. Here, the processing happens locally instead, so there is no upload step and no copy of your file stored elsewhere.</p>
+    <p>Running locally is also simpler to trust. If a tool never receives your file, it cannot leak, log, or keep it.</p>
+  </section>
+
+  <section class="card" id="highlights">
+    <h2>Key highlights</h2>
+    <div class="grid grid-3">
+      <div class="tile">
+        <div class="icon" aria-hidden="true">&#128274;</div>
+        <h3>No uploads to external servers</h3>
+        <p>Files are read directly from your device and never leave it. There are no accounts, no file queues, and nothing to delete afterwards.</p>
+      </div>
+      <div class="tile">
+        <div class="icon" aria-hidden="true">&#9889;</div>
+        <h3>Instant processing</h3>
+        <p>With no upload or download wait, results appear as fast as your device can compute them, even on slow or unstable connections.</p>
+      </div>
+      <div class="tile">
+        <div class="icon" aria-hidden="true">&#127760;</div>
+        <h3>Works in modern browsers</h3>
+        <p>Chrome, Edge, Firefox, Safari, and other current browsers on desktop and mobile run the tools without plugins or installs.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="how-it-works">
+    <h2>How the client-side architecture works</h2>
+    <p>The whole site is static. The pages and scripts are delivered to your browser once, and from then on every operation happens on your device.</p>
+    <ol class="flow">
+      <li>
+        <span class="n">1</span>
+        <div><strong>You choose a file</strong><span>The browser gives the page access to the file you selected or dropped. The file stays on your device.</span></div>
+      </li>
+      <li>
+        <span class="n">2</span>
+        <div><strong>Your browser processes it</strong><span>JavaScript running in the tab reads and transforms the file in memory, using your device's own processor.</span></div>
+      </li>
+      <li>
+        <span class="n">3</span>
+        <div><strong>You save the result</strong><span>The finished file is generated locally and downloaded straight to your device.</span></div>
+      </li>
+    </ol>
+    <div class="note"><strong>Good to know:</strong> Because everything happens in your browser, closing the tab clears the working data from memory. Very large files depend on your device's available memory, so a phone may handle them more slowly than a computer.</div>
+  </section>
+
+  <section class="card" id="categories">
+    <h2>Tool categories</h2>
+    <p class="muted">Jump straight to the type of tool you need.</p>
+    <div class="grid grid-3">
+      <a class="tile" href="index.html#pdf-tools">
+        <div class="icon" aria-hidden="true">&#128196;</div>
+        <h3>BurlPDF</h3>
+        <p>Work with PDF documents directly in your browser, without sending them anywhere.</p>
+        <div class="tags"><span class="tag">Merge</span><span class="tag">Split</span><span class="tag">Convert</span></div>
+      </a>
+      <a class="tile" href="index.html#image-tools">
+        <div class="icon" aria-hidden="true">&#128444;</div>
+        <h3>Image tools</h3>
+        <p>Resize, convert, and prepare photos and graphics using your device's own processing power.</p>
+        <div class="tags"><span class="tag">Resize</span><span class="tag">Compress</span><span class="tag">Convert</span></div>
+      </a>
+      <a class="tile" href="index.html#data-tools">
+        <div class="icon" aria-hidden="true">&#128202;</div>
+        <h3>Data &amp; text tools</h3>
+        <p>Clean, format, and transform text and structured data without exposing it to a third party.</p>
+        <div class="tags"><span class="tag">Format</span><span class="tag">Convert</span><span class="tag">Clean up</span></div>
+      </a>
+    </div>
+  </section>
+
+  <section class="card" id="privacy">
+    <h2>Privacy at a glance</h2>
+    <div class="grid grid-2">
+      <div class="tile">
+        <h3>What stays on your device</h3>
+        <p>The files you open, the processing steps, and the results you generate.</p>
+      </div>
+      <div class="tile">
+        <h3>What the server provides</h3>
+        <p>Only the static page and script files that make the tools load in your browser.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" style="text-align:center;">
+    <h2>Ready to get started?</h2>
+    <p class="muted" style="margin-left:auto;margin-right:auto;">Pick a tool and see for yourself: your files never leave your browser.</p>
+    <div class="btn-row">
+      <a class="btn" href="index.html">Back to all tools</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="index.html#pdf-tools">BurlPDF</a>
+      <a href="index.html#image-tools">Image tools</a>
+      <a href="index.html#data-tools">Data &amp; text tools</a>
+      <a href="about.html">About</a>
+    </div>
+    <p class="footer-copy">Private by design. All processing runs in your browser.</p>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Edit PDF – Add Text &amp; Watermark Online (100% Local)</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--line:#e3e5ea;--text:#26282d;--muted:#6b7280;--accent:#e5322d;--accent-d:#c42722;--blue:#2f6fed;--r:12px}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.nav{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line)}
+.nav-in{max-width:1180px;margin:0 auto;padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;text-decoration:none;letter-spacing:-.01em}
+.logo{width:28px;height:28px;border-radius:7px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:13px;font-weight:800}
+.nav a.back{text-decoration:none;font-weight:600;font-size:14px;color:var(--text);padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:#fff;transition:background .15s}
+.nav a.back:hover{background:var(--bg)}
+main{max-width:1180px;margin:0 auto;padding:36px 20px 56px}
+.hero{text-align:center;margin-bottom:28px}
+h1{font-size:clamp(26px,4vw,36px);line-height:1.15;margin:0 0 8px;letter-spacing:-.02em}
+.hero p{margin:0 auto;max-width:620px;color:var(--muted);font-size:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 1px 2px rgba(20,24,35,.04)}
+.drop{max-width:760px;margin:0 auto;padding:56px 24px;text-align:center;border:2px dashed #cfd3db;cursor:pointer;transition:border-color .15s,background .15s}
+.drop.over{border-color:var(--accent);background:#fff7f6}
+.drop svg{width:48px;height:48px;color:var(--accent)}
+.drop h2{margin:12px 0 4px;font-size:20px}
+.drop p{margin:0 0 20px;color:var(--muted)}
+.btn{appearance:none;border:0;cursor:pointer;font:inherit;font-weight:700;border-radius:10px;padding:12px 22px;background:var(--accent);color:#fff;transition:background .15s}
+.btn:hover{background:var(--accent-d)}
+.btn:disabled{background:#d9dce2;color:#8b909b;cursor:not-allowed}
+.btn.big{width:100%;padding:15px 22px;font-size:16px}
+.btn.ghost{background:#fff;color:var(--text);border:1px solid var(--line);padding:8px 14px;font-weight:600;font-size:13px}
+.btn.ghost:hover{background:var(--bg)}
+.editor{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;align-items:start}
+.editor[hidden],.drop[hidden]{display:none}
+.panel{padding:18px}
+.panel h3{margin:0 0 12px;font-size:15px}
+.filebar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.fname{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fmeta{color:var(--muted);font-size:13px}
+.stage{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;justify-content:center;min-height:240px;overflow:auto}
+.pagewrap{position:relative;background:#fff;box-shadow:0 2px 10px rgba(20,24,35,.15);line-height:0}
+.pagewrap canvas{display:block}
+#over{position:absolute;inset:0;pointer-events:none}
+.pager{display:flex;align-items:center;justify-content:center;gap:12px;margin:12px 0}
+.pager span{font-weight:600;min-width:110px;text-align:center}
+.thumbs{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px}
+.thumb{flex:0 0 auto;width:84px;border:2px solid var(--line);border-radius:8px;background:#fff;padding:4px;cursor:pointer;text-align:center;font-size:12px;color:var(--muted)}
+.thumb canvas{width:100%;height:auto;display:block;border-radius:3px;background:#f0f1f4}
+.thumb.cur{border-color:var(--blue)}
+.thumb.sel{background:#fdeceb;border-color:var(--accent);color:var(--accent-d);font-weight:700}
+.thumb.cur.sel{box-shadow:0 0 0 2px var(--blue)}
+label,.lbl{display:block;font-weight:600;font-size:13px;margin:14px 0 6px}
+.panel label:first-of-type{margin-top:0}
+input[type=text],select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff;color:var(--text)}
+input[type=text]:focus,select:focus{border-color:var(--blue)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=color]{width:46px;height:38px;border:1px solid var(--line);border-radius:8px;padding:3px;background:#fff;cursor:pointer}
+.row{display:flex;gap:10px;align-items:center}
+.row>*{flex:1}
+.row>input[type=color]{flex:0 0 46px}
+.val{flex:0 0 auto;min-width:46px;text-align:right;color:var(--muted);font-weight:600;font-size:13px}
+.radio{display:flex;gap:16px;margin-bottom:8px}
+.radio label{margin:0;font-weight:500;display:flex;gap:6px;align-items:center;cursor:pointer}
+.presets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.presets button{padding:8px 6px;font-size:13px}
+.status{margin:14px 0 0;padding:10px 12px;border-radius:8px;background:var(--bg);border:1px solid var(--line);font-size:13px;color:var(--muted)}
+.status.err{background:#fdeceb;border-color:#f3b9b6;color:#9c1f1b}
+.status.ok{background:#eaf7ee;border-color:#b6e2c2;color:#1c6b36}
+.sec{margin-top:44px}
+.sec>h2{font-size:24px;margin:0 0 16px;letter-spacing:-.01em}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.step{padding:20px}
+.step b{display:block;margin-bottom:6px;font-size:16px}
+.step p{margin:0;color:var(--muted)}
+.faq{padding:6px 20px}
+.faq details{border-bottom:1px solid var(--line);padding:14px 0}
+.faq details:last-child{border-bottom:0}
+.faq summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between;gap:12px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-size:20px;line-height:1;color:var(--muted)}
+.faq details[open] summary::after{content:"–"}
+.faq p{margin:10px 0 0;color:var(--muted)}
+footer{text-align:center;color:var(--muted);font-size:13px;padding:0 20px 32px}
+@media(max-width:940px){.editor{grid-template-columns:1fr}.steps{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-in">
+    <a class="brand" href="index.html"><span class="logo">PDF</span>BurlPDF</a>
+    <a class="back" href="index.html">&larr; Back to all tools</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Edit PDF: add text &amp; watermarks</h1>
+    <p>Stamp custom text, a diagonal watermark, or a note on any page. Your file never leaves this browser tab.</p>
+  </section>
+
+  <div id="drop" class="card drop" tabindex="0" role="button" aria-label="Choose a PDF file">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 17v-6M9.5 13.5 12 11l2.5 2.5"/></svg>
+    <h2>Drop a PDF here</h2>
+    <p>or pick one from your device. One file at a time.</p>
+    <button class="btn" type="button" id="pick">Select PDF file</button>
+    <input type="file" id="file" accept="application/pdf,.pdf" hidden>
+    <p id="dropmsg" class="status err" hidden style="margin:18px auto 0;max-width:460px"></p>
+  </div>
+
+  <div id="editor" class="editor" hidden>
+    <section class="card panel">
+      <div class="filebar">
+        <div style="min-width:0"><div class="fname" id="fname"></div><div class="fmeta" id="fmeta"></div></div>
+        <button class="btn ghost" type="button" id="change">Choose another file</button>
+      </div>
+      <div class="stage"><div class="pagewrap"><canvas id="base"></canvas><canvas id="over"></canvas></div></div>
+      <div class="pager">
+        <button class="btn ghost" type="button" id="prev" aria-label="Previous page">&larr; Prev</button>
+        <span id="pageinfo">Page 1 of 1</span>
+        <button class="btn ghost" type="button" id="next" aria-label="Next page">Next &rarr;</button>
+      </div>
+      <div class="thumbs" id="thumbs" aria-label="Page thumbnails"></div>
+    </section>
+
+    <aside class="card panel">
+      <h3>Text &amp; watermark</h3>
+
+      <label for="text">Text</label>
+      <input type="text" id="text" value="CONFIDENTIAL" maxlength="200" autocomplete="off">
+
+      <label for="font">Font</label>
+      <select id="font">
+        <option value="Helvetica">Helvetica</option>
+        <option value="HelveticaBold" selected>Helvetica Bold</option>
+        <option value="TimesRoman">Times Roman</option>
+        <option value="TimesRomanBold">Times Roman Bold</option>
+        <option value="Courier">Courier</option>
+        <option value="CourierBold">Courier Bold</option>
+      </select>
+
+      <label for="size">Font size</label>
+      <div class="row"><input type="range" id="size" min="6" max="200" value="64"><span class="val" id="sizeV">64 pt</span></div>
+
+      <div class="row" style="margin-top:14px;align-items:flex-end">
+        <div><label for="color" style="margin-top:0">Color</label><input type="color" id="color" value="#e5322d"></div>
+        <div><label for="opacity" style="margin-top:0">Opacity</label>
+          <div class="row"><input type="range" id="opacity" min="5" max="100" value="30"><span class="val" id="opacityV">30%</span></div></div>
+      </div>
+
+      <span class="lbl">Placement</span>
+      <div class="presets">
+        <button class="btn ghost" type="button" data-p="50,50,0">Center</button>
+        <button class="btn ghost" type="button" data-p="50,8,0">Top</button>
+        <button class="btn ghost" type="button" data-p="50,92,0">Bottom</button>
+        <button class="btn ghost" type="button" data-p="50,50,45">Diagonal</button>
+        <button class="btn ghost" type="button" data-p="20,92,0">Bottom left</button>
+        <button class="btn ghost" type="button" data-p="80,92,0">Bottom right</button>
+      </div>
+
+      <label for="x">Horizontal position (X)</label>
+      <div class="row"><input type="range" id="x" min="0" max="100" value="50"><span class="val" id="xV">50%</span></div>
+      <label for="y">Vertical position (Y, from top)</label>
+      <div class="row"><input type="range" id="y" min="0" max="100" value="50"><span class="val" id="yV">50%</span></div>
+      <label for="rot">Rotation</label>
+      <div class="row"><input type="range" id="rot" min="-180" max="180" value="45"><span class="val" id="rotV">45&deg;</span></div>
+
+      <span class="lbl">Apply to</span>
+      <div class="radio">
+        <label><input type="radio" name="mode" value="all" checked> All pages</label>
+        <label><input type="radio" name="mode" value="some"> Specific pages</label>
+      </div>
+      <input type="text" id="range" placeholder="e.g. 1, 3-5, 8" autocomplete="off" disabled aria-label="Page numbers">
+
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <div style="margin-top:14px"><button class="btn big" type="button" id="apply">Apply &amp; Download Edited PDF</button></div>
+    </aside>
+  </div>
+
+  <section class="sec" id="how">
+    <h2>How it works</h2>
+    <div class="steps">
+      <div class="card step"><b>1. Add your PDF</b><p>Drag a file onto the page or pick one. It is opened by your browser only, with no upload.</p></div>
+      <div class="card step"><b>2. Set up your text</b><p>Type the text, choose font, size, color, opacity and placement, then pick all pages or specific ones. The preview updates as you type.</p></div>
+      <div class="card step"><b>3. Download</b><p>Press Apply &amp; Download. A new copy is created on your device and your original file stays untouched.</p></div>
+    </div>
+  </section>
+
+  <section class="sec" id="faq">
+    <h2>FAQ</h2>
+    <div class="card faq">
+      <details><summary>Is my PDF uploaded anywhere?</summary><p>No. Reading, previewing and editing all happen in your browser using JavaScript libraries. Nothing is sent to a server, so confidential documents stay on your device.</p></details>
+      <details><summary>How do I make a diagonal watermark?</summary><p>Click the Diagonal preset. It centers your text at a 45&deg; angle. Lower the opacity to around 20&ndash;30% so the page content stays readable.</p></details>
+      <details><summary>Can I stamp only certain pages?</summary><p>Yes. Choose Specific pages and enter numbers or ranges such as <code>1, 3-5, 9</code>. In that mode you can also click thumbnails to select or deselect pages.</p></details>
+      <details><summary>Why are some characters rejected?</summary><p>The built-in PDF fonts support Latin characters (English and most Western European languages). Symbols outside that set, such as Chinese, Arabic or emoji, cannot be drawn with these fonts.</p></details>
+      <details><summary>Does this change the existing text in my PDF?</summary><p>No. It adds new text on top of the pages. Existing content is not edited or removed.</p></details>
+      <details><summary>Why does it say my PDF is protected?</summary><p>Password-protected PDFs cannot be modified here. Remove the password first, then try again.</p></details>
+    </div>
+  </section>
+</main>
+
+<footer>Runs 100% locally in your browser. No files are uploaded.</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+  var FONTS = {
+    Helvetica:      { pdf: "Helvetica",           css: "Helvetica, Arial, sans-serif", w: "400" },
+    HelveticaBold:  { pdf: "HelveticaBold",       css: "Helvetica, Arial, sans-serif", w: "700" },
+    TimesRoman:     { pdf: "TimesRoman",          css: "'Times New Roman', Times, serif", w: "400" },
+    TimesRomanBold: { pdf: "TimesRomanBold",      css: "'Times New Roman', Times, serif", w: "700" },
+    Courier:        { pdf: "Courier",             css: "'Courier New', Courier, monospace", w: "400" },
+    CourierBold:    { pdf: "CourierBold",         css: "'Courier New', Courier, monospace", w: "700" }
+  };
+  var CAP = 0.35; // half cap-height as a fraction of font size, shared by preview and export
+
+  var st = { name: "", bytes: null, doc: null, count: 0, cur: 1, sel: new Set(), token: 0, cssW: 0, ptW: 0 };
+  var els = {};
+  ["drop","file","pick","dropmsg","editor","fname","fmeta","change","base","over","prev","next","pageinfo","thumbs",
+   "text","font","size","sizeV","color","opacity","opacityV","x","xV","y","yV","rot","rotV","range","status","apply"]
+    .forEach(function (k) { els[k] = $(k); });
+
+  function setStatus(msg, kind) {
+    els.status.textContent = msg;
+    els.status.className = "status" + (kind ? " " + kind : "");
+  }
+  function showDropError(msg) { els.dropmsg.textContent = msg; els.dropmsg.hidden = !msg; }
+  function fmtSize(b) { return b > 1048576 ? (b / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b / 1024)) + " KB"; }
+  function mode() { return document.querySelector("input[name=mode]:checked").value; }
+
+  /* ---------- file intake ---------- */
+  els.pick.addEventListener("click", function (e) { e.stopPropagation(); els.file.click(); });
+  els.drop.addEventListener("click", function () { els.file.click(); });
+  els.drop.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); els.file.click(); } });
+  els.change.addEventListener("click", function () { els.file.value = ""; els.file.click(); });
+  els.file.addEventListener("change", function () { if (els.file.files[0]) loadFile(els.file.files[0]); });
+  ["dragenter", "dragover"].forEach(function (ev) {
+    document.addEventListener(ev, function (e) { e.preventDefault(); if (!els.drop.hidden) els.drop.classList.add("over"); });
+  });
+  ["dragleave", "drop"].forEach(function (ev) {
+    document.addEventListener(ev, function (e) { e.preventDefault(); els.drop.classList.remove("over"); });
+  });
+  document.addEventListener("drop", function (e) {
+    var f = e.dataTransfer && e.dataTransfer.files;
+    if (!f || !f.length) return;
+    if (f.length > 1) { showDropError("Please drop a single PDF file."); return; }
+    loadFile(f[0]);
+  });
+
+  async function loadFile(f) {
+    showDropError("");
+    if (!(f.type === "application/pdf" || /\.pdf$/i.test(f.name))) { showDropError("That file is not a PDF. Please choose a .pdf file."); return; }
+    try {
+      var buf = await f.arrayBuffer();
+      var doc = await pdfjsLib.getDocument({ data: new Uint8Array(buf.slice(0)) }).promise;
+      st.token++;
+      st.name = f.name; st.bytes = buf; st.doc = doc; st.count = doc.numPages; st.cur = 1; st.sel = new Set();
+      els.fname.textContent = f.name;
+      els.fmeta.textContent = st.count + (st.count === 1 ? " page" : " pages") + " \u00b7 " + fmtSize(f.size);
+      els.drop.hidden = true; els.editor.hidden = false;
+      document.querySelector("input[name=mode][value=all]").checked = true;
+      els.range.value = ""; els.range.disabled = true;
+      setStatus("Ready. Adjust the text and placement, then download.");
+      buildThumbs();
+      await renderPreview();
+    } catch (err) {
+      var m = String(err && err.name) === "PasswordException" ? "This PDF is password-protected. Remove the password and try again." : "Could not read this PDF. The file may be damaged.";
+      showDropError(m);
+    }
+  }
+
+  /* ---------- page selection ---------- */
+  function parseRange(s) {
+    var out = new Set(), parts = s.split(",");
+    for (var i = 0; i < parts.length; i++) {
+      var p = parts[i].trim(); if (!p) continue;
+      var m = /^(\d+)(?:\s*-\s*(\d+))?$/.exec(p);
+      if (!m) return null;
+      var a = +m[1], b = m[2] ? +m[2] : a;
+      if (a > b) { var t = a; a = b; b = t; }
+      if (a < 1 || b > st.count) return null;
+      for (var n = a; n <= b; n++) out.add(n);
+    }
+    return out;
+  }
+  function targets() {
+    if (mode() === "all") { var all = []; for (var i = 1; i <= st.count; i++) all.push(i); return all; }
+    var s = parseRange(els.range.value);
+    return s ? Array.from(s).sort(function (a, b) { return a - b; }) : null;
+  }
+  function syncRangeFromSel() {
+    var a = Array.from(st.sel).sort(function (x, y) { return x - y; }), parts = [], i = 0;
+    while (i < a.length) { var j = i; while (j + 1 < a.length && a[j + 1] === a[j] + 1) j++; parts.push(j > i ? a[i] + "-" + a[j] : "" + a[i]); i = j + 1; }
+    els.range.value = parts.join(", ");
+  }
+  function refreshThumbs() {
+    var t = targets(), set = new Set(t || []);
+    Array.prototype.forEach.call(els.thumbs.children, function (el) {
+      var n = +el.dataset.n;
+      el.classList.toggle("cur", n === st.cur);
+      el.classList.toggle("sel", set.has(n));
+    });
+  }
+  document.querySelectorAll("input[name=mode]").forEach(function (r) {
+    r.addEventListener("change", function () {
+      var some = mode() === "some";
+      els.range.disabled = !some;
+      if (some && !els.range.value) { st.sel = new Set([st.cur]); syncRangeFromSel(); }
+      if (some) els.range.focus();
+      update();
+    });
+  });
+  els.range.addEventListener("input", function () {
+    var s = parseRange(els.range.value); if (s) st.sel = s;
+    update();
+  });
+
+  function buildThumbs() {
+    els.thumbs.innerHTML = "";
+    var tok = st.token;
+    for (var n = 1; n <= st.count; n++) {
+      var d = document.createElement("div");
+      d.className = "thumb"; d.dataset.n = n; d.tabIndex = 0;
+      d.setAttribute("role", "button"); d.setAttribute("aria-label", "Page " + n);
+      d.innerHTML = "<canvas></canvas><div>" + n + "</div>";
+      d.addEventListener("click", thumbClick);
+      d.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); thumbClick.call(this); } });
+      els.thumbs.appendChild(d);
+    }
+    (async function () {
+      for (var i = 1; i <= st.count; i++) {
+        if (tok !== st.token) return;
+        try {
+          var pg = await st.doc.getPage(i), vp0 = pg.getViewport({ scale: 1 }), s = 160 / vp0.width, vp = pg.getViewport({ scale: s });
+          var c = els.thumbs.children[i - 1].querySelector("canvas");
+          c.width = vp.width; c.height = vp.height;
+          await pg.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise;
+        } catch (e) { /* thumbnail is cosmetic */ }
+      }
+    })();
+    refreshThumbs();
+  }
+  function thumbClick() {
+    var n = +this.dataset.n;
+    if (mode() === "some") {
+      if (st.sel.has(n)) st.sel.delete(n); else st.sel.add(n);
+      syncRangeFromSel();
+    }
+    goTo(n);
+  }
+
+  /* ---------- preview ---------- */
+  function goTo(n) { st.cur = Math.min(Math.max(1, n), st.count); renderPreview(); refreshThumbs(); }
+  els.prev.addEventListener("click", function () { goTo(st.cur - 1); });
+  els.next.addEventListener("click", function () { goTo(st.cur + 1); });
+
+  var rendering = 0;
+  async function renderPreview() {
+    var id = ++rendering;
+    els.pageinfo.textContent = "Page " + st.cur + " of " + st.count;
+    els.prev.disabled = st.cur <= 1; els.next.disabled = st.cur >= st.count;
+    var pg = await st.doc.getPage(st.cur), vp0 = pg.getViewport({ scale: 1 });
+    var avail = Math.max(240, Math.min(640, els.editor.querySelector(".stage").clientWidth - 34));
+    var s = avail / vp0.width, dpr = window.devicePixelRatio || 1, vp = pg.getViewport({ scale: s * dpr });
+    if (id !== rendering) return;
+    var c = els.base;
+    c.width = vp.width; c.height = vp.height; c.style.width = avail + "px"; c.style.height = (vp0.height * s) + "px";
+    els.over.width = vp.width; els.over.height = vp.height; els.over.style.width = c.style.width; els.over.style.height = c.style.height;
+    st.cssW = avail; st.ptW = vp0.width; st.dpr = dpr;
+    await pg.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise;
+    if (id === rendering) drawOverlay();
+  }
+
+  function settings() {
+    return {
+      text: els.text.value, font: FONTS[els.font.value], size: +els.size.value, color: els.color.value,
+      opacity: +els.opacity.value / 100, x: +els.x.value / 100, y: +els.y.value / 100, rot: +els.rot.value
+    };
+  }
+  function drawOverlay() {
+    var c = els.over, ctx = c.getContext("2d");
+    ctx.clearRect(0, 0, c.width, c.height);
+    var t = targets(), o = settings();
+    if (!o.text.trim() || !t || t.indexOf(st.cur) < 0) return;
+    var k = (c.width / st.dpr) / st.ptW * st.dpr; // canvas pixels per PDF point
+    var px = o.size * k;
+    ctx.save();
+    ctx.globalAlpha = o.opacity; ctx.fillStyle = o.color;
+    ctx.font = o.font.w + " " + px + "px " + o.font.css;
+    ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+    ctx.translate(o.x * c.width, o.y * c.height);
+    ctx.rotate(-o.rot * Math.PI / 180);
+    ctx.fillText(o.text, 0, CAP * px);
+    ctx.restore();
+  }
+
+  function update() {
+    els.sizeV.textContent = els.size.value + " pt";
+    els.opacityV.textContent = els.opacity.value + "%";
+    els.xV.textContent = els.x.value + "%";
+    els.yV.textContent = els.y.value + "%";
+    els.rotV.textContent = els.rot.value + "\u00b0";
+    var t = targets();
+    if (!t) setStatus("Enter valid page numbers between 1 and " + st.count + ", like 1, 3-5.", "err");
+    else if (!els.text.value.trim()) setStatus("Type some text to add.", "err");
+    else setStatus("Will add \u201c" + els.text.value.trim().slice(0, 30) + (els.text.value.trim().length > 30 ? "\u2026" : "") + "\u201d to " + t.length + (t.length === 1 ? " page" : " pages") + (t.indexOf(st.cur) < 0 ? ". The page shown is not selected, so no preview text appears." : "."));
+    refreshThumbs();
+    if (st.doc) drawOverlay();
+  }
+  ["text", "font", "size", "color", "opacity", "x", "y", "rot"].forEach(function (k) {
+    els[k].addEventListener("input", update);
+  });
+  document.querySelectorAll("[data-p]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var p = b.dataset.p.split(",");
+      els.x.value = p[0]; els.y.value = p[1]; els.rot.value = p[2];
+      update();
+    });
+  });
+  window.addEventListener("resize", function () { if (st.doc && !els.editor.hidden) renderPreview(); });
+
+  /* ---------- export ---------- */
+  function hexToRgb(h) {
+    var n = parseInt(h.slice(1), 16);
+    return PDFLib.rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255);
+  }
+  els.apply.addEventListener("click", async function () {
+    var t = targets(), o = settings();
+    if (!t || !t.length) { setStatus("Enter valid page numbers between 1 and " + st.count + ".", "err"); return; }
+    if (!o.text.trim()) { setStatus("Type some text to add.", "err"); return; }
+    els.apply.disabled = true; setStatus("Editing your PDF\u2026");
+    try {
+      var pdf = await PDFLib.PDFDocument.load(st.bytes);
+      var font = await pdf.embedFont(PDFLib.StandardFonts[o.font.pdf]);
+      try { font.encodeText(o.text); }
+      catch (e) { throw new Error("The text has characters this font cannot draw. Use Latin letters, numbers and common punctuation."); }
+      var w = font.widthOfTextAtSize(o.text, o.size), th = o.rot * Math.PI / 180, cos = Math.cos(th), sin = Math.sin(th);
+      var color = hexToRgb(o.color), pages = pdf.getPages();
+      t.forEach(function (n) {
+        var page = pages[n - 1], sz = page.getSize();
+        var cx = o.x * sz.width, cy = (1 - o.y) * sz.height;
+        var ox = -w / 2, oy = -CAP * o.size;
+        page.drawText(o.text, {
+          x: cx + ox * cos - oy * sin, y: cy + ox * sin + oy * cos,
+          size: o.size, font: font, color: color, opacity: o.opacity,
+          rotate: PDFLib.degrees(o.rot)
+        });
+      });
+      var out = await pdf.save();
+      var url = URL.createObjectURL(new Blob([out], { type: "application/pdf" }));
+      var a = document.createElement("a");
+      a.href = url; a.download = st.name.replace(/\.pdf$/i, "") + "-edited.pdf";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      setStatus("Done. Added text to " + t.length + (t.length === 1 ? " page" : " pages") + " and downloaded " + a.download + ".", "ok");
+    } catch (err) {
+      var msg = /encrypt/i.test(String(err && err.message)) ? "This PDF is encrypted, so it cannot be edited. Remove the password and try again." : (err && err.message) || "Something went wrong while editing the PDF.";
+      setStatus(msg, "err");
+    } finally { els.apply.disabled = false; }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Markdown Export – Edit, Preview, Copy &amp; Download</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --border: #e3e6eb;
+    --text: #1f2933;
+    --muted: #66707d;
+    --accent: #e5322d;
+    --accent-dark: #c92621;
+    --ok: #1f8a4c;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+  }
+  a { color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Navbar */
+  .navbar {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(20, 30, 50, .05);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .navbar-inner {
+    max-width: 1280px; margin: 0 auto; padding: 0 20px; height: 60px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .brand { font-weight: 700; font-size: 1.15rem; color: var(--text); text-decoration: none; }
+  .brand span { color: var(--accent); }
+  .nav-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--text); text-decoration: none; font-weight: 600; font-size: .95rem;
+    padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: #fff;
+  }
+  .nav-link:hover { background: var(--bg); }
+
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 28px 20px 60px; }
+  .page-head { text-align: center; margin-bottom: 24px; }
+  .page-head h1 { margin: 0 0 6px; font-size: clamp(1.6rem, 3vw, 2.2rem); }
+  .page-head p { margin: 0 auto; color: var(--muted); max-width: 640px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 1px 2px rgba(20, 30, 50, .04);
+  }
+
+  /* Toolbar + actions */
+  .bar {
+    padding: 12px 14px; margin-bottom: 16px;
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+  }
+  .group { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .group-label { font-size: .85rem; color: var(--muted); font-weight: 600; margin-right: 2px; }
+  button {
+    font: inherit; font-size: .9rem; font-weight: 600; cursor: pointer;
+    padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border);
+    background: #fff; color: var(--text);
+    transition: background .15s, border-color .15s;
+  }
+  button:hover { background: var(--bg); border-color: #cfd4db; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+  .tool { min-width: 40px; padding: 8px 12px; }
+
+  /* Panes */
+  .panes { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .pane { display: flex; flex-direction: column; min-height: 560px; overflow: hidden; }
+  .pane-head {
+    padding: 10px 16px; border-bottom: 1px solid var(--border); background: #fafbfc;
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    font-weight: 600; font-size: .92rem;
+  }
+  .pane-head small { color: var(--muted); font-weight: 400; }
+  textarea#editor {
+    flex: 1; width: 100%; border: 0; resize: none; padding: 16px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .92rem; line-height: 1.6; color: var(--text); background: #fff;
+  }
+  textarea#editor:focus { outline: none; box-shadow: inset 0 0 0 2px rgba(229, 50, 45, .25); }
+  #preview { flex: 1; padding: 18px 22px; overflow: auto; background: #fff; word-wrap: break-word; }
+
+  /* Rendered markdown */
+  #preview h1, #preview h2 { border-bottom: 1px solid var(--border); padding-bottom: .3em; }
+  #preview h1 { font-size: 1.8rem; margin-top: 0; }
+  #preview h2 { font-size: 1.4rem; }
+  #preview code { background: #f1f3f5; padding: 2px 6px; border-radius: 5px; font-size: .88em; font-family: ui-monospace, Menlo, Consolas, monospace; }
+  #preview pre { background: #1f2933; color: #f4f5f7; padding: 14px; border-radius: 8px; overflow: auto; }
+  #preview pre code { background: transparent; padding: 0; color: inherit; }
+  #preview blockquote { margin: 1em 0; padding: 4px 16px; border-left: 4px solid var(--border); color: var(--muted); }
+  #preview table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+  #preview th, #preview td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
+  #preview th { background: #fafbfc; }
+  #preview img { max-width: 100%; }
+  #preview hr { border: 0; border-top: 1px solid var(--border); }
+
+  .status { min-height: 24px; margin: 12px 4px 0; font-size: .92rem; color: var(--ok); font-weight: 600; }
+  .status.error { color: var(--accent-dark); }
+  .privacy { text-align: center; color: var(--muted); font-size: .88rem; margin: 6px 0 0; }
+
+  /* Info sections */
+  .info { margin-top: 28px; padding: 26px 28px; }
+  .info h2 { margin: 0 0 14px; font-size: 1.4rem; }
+  .steps { margin: 0; padding-left: 20px; }
+  .steps li { margin-bottom: 8px; }
+  details { border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; background: #fff; }
+  summary { cursor: pointer; font-weight: 600; }
+  details p { margin: 10px 0 2px; color: var(--muted); }
+
+  footer { text-align: center; color: var(--muted); font-size: .85rem; padding: 10px 20px 30px; }
+
+  @media (max-width: 860px) {
+    .panes { grid-template-columns: 1fr; }
+    .pane { min-height: 380px; }
+    .info { padding: 20px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    button { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="navbar-inner">
+    <a class="brand" href="index.html"><span>Burl</span> PDF</a>
+    <a class="nav-link" href="index.html">← Back to all tools</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="page-head">
+    <h1>Markdown Export</h1>
+    <p>Write Markdown, see it rendered instantly, then copy or download it as .md or .html. Everything runs in your browser.</p>
+  </div>
+
+  <section class="card bar" aria-label="Markdown toolbar and export actions">
+    <div class="group" role="toolbar" aria-label="Insert Markdown syntax">
+      <span class="group-label">Insert:</span>
+      <button class="tool" type="button" data-action="heading" title="Heading">Heading</button>
+      <button class="tool" type="button" data-action="bold" title="Bold"><b>B</b></button>
+      <button class="tool" type="button" data-action="italic" title="Italic"><i>I</i></button>
+      <button class="tool" type="button" data-action="link" title="Link">Link</button>
+      <button class="tool" type="button" data-action="code" title="Code block">Code Block</button>
+      <button class="tool" type="button" data-action="list" title="List">List</button>
+      <button type="button" id="sampleBtn">Sample Markdown</button>
+      <button type="button" id="clearBtn">Clear</button>
+    </div>
+    <div class="group">
+      <button type="button" id="copyMd">Copy Markdown</button>
+      <button type="button" id="copyHtml">Copy Rendered HTML</button>
+      <button type="button" class="primary" id="dlMd">Download .MD</button>
+      <button type="button" class="primary" id="dlHtml">Download .HTML</button>
+    </div>
+  </section>
+
+  <section class="panes">
+    <div class="card pane">
+      <div class="pane-head"><span>Markdown editor</span><small id="counter">0 words · 0 characters</small></div>
+      <textarea id="editor" spellcheck="false" aria-label="Markdown editor" placeholder="Type or paste your Markdown here..."></textarea>
+    </div>
+    <div class="card pane">
+      <div class="pane-head"><span>Live preview</span><small>Rendered HTML</small></div>
+      <div id="preview" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <div class="status" id="status" role="status"></div>
+  <p class="privacy">🔒 Your text never leaves this page. Nothing is uploaded to a server.</p>
+
+  <section class="card info" id="how">
+    <h2>How It Works</h2>
+    <ol class="steps">
+      <li><strong>Write or paste</strong> your Markdown in the editor, or press <em>Sample Markdown</em> to start from an example.</li>
+      <li><strong>Use the toolbar</strong> to add headings, bold, italic, links, code blocks and lists without remembering the syntax.</li>
+      <li><strong>Check the preview</strong>. It updates as you type, using a Markdown library that runs in your browser.</li>
+      <li><strong>Export</strong> by copying the Markdown or rendered HTML, or by downloading a .md or .html file.</li>
+    </ol>
+  </section>
+
+  <section class="card info" id="faq">
+    <h2>FAQ</h2>
+    <details>
+      <summary>Is my text uploaded anywhere?</summary>
+      <p>No. Rendering, copying and downloading all happen locally in your browser. Only the Markdown and sanitizing libraries are loaded from a CDN when the page opens.</p>
+    </details>
+    <details>
+      <summary>What Markdown features are supported?</summary>
+      <p>Headings, bold, italic, links, images, lists, blockquotes, inline code, fenced code blocks, tables, horizontal rules and strikethrough (GitHub-flavored Markdown).</p>
+    </details>
+    <details>
+      <summary>What does the downloaded .html file contain?</summary>
+      <p>A complete, standalone HTML page with your rendered content and a small built-in stylesheet. You can open it in any browser or paste it into a website.</p>
+    </details>
+    <details>
+      <summary>Is the HTML output safe?</summary>
+      <p>Yes. The rendered HTML is sanitized, so scripts and unsafe attributes are removed before the preview, copy, or download.</p>
+    </details>
+    <details>
+      <summary>Why is the preview blank or unstyled?</summary>
+      <p>The libraries could not load. Check your internet connection and reload the page. Your text stays in the editor and the toolbar still works.</p>
+    </details>
+  </section>
+</main>
+
+<footer>© Your site. Free Markdown tools that work in your browser.</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js"></script>
+<script>
+(function () {
+  var editor = document.getElementById('editor');
+  var preview = document.getElementById('preview');
+  var statusEl = document.getElementById('status');
+  var counter = document.getElementById('counter');
+  var statusTimer;
+
+  var SAMPLE = [
+    '# Welcome to Markdown Export',
+    '',
+    'Write on the left and see the **rendered result** on the right. This text is *only processed in your browser*.',
+    '',
+    '## Features',
+    '',
+    '- Live preview as you type',
+    '- Copy Markdown or rendered HTML',
+    '- Download as `.md` or `.html`',
+    '',
+    '## Steps',
+    '',
+    '1. Write your Markdown',
+    '2. Check the preview',
+    '3. Export it',
+    '',
+    '## Code',
+    '',
+    '```js',
+    'function greet(name) {',
+    '  return "Hello, " + name + "!";',
+    '}',
+    '```',
+    '',
+    '> Tip: select some text, then click a toolbar button to wrap it.',
+    '',
+    '| Format | Use case |',
+    '| ------ | -------- |',
+    '| .md    | Docs, notes, READMEs |',
+    '| .html  | Web pages, emails |',
+    '',
+    'Learn more at [Markdown Guide](https://www.markdownguide.org).',
+    ''
+  ].join('\n');
+
+  function librariesReady() {
+    return typeof window.marked !== 'undefined' && typeof window.DOMPurify !== 'undefined';
+  }
+
+  function renderHTML() {
+    if (!librariesReady()) { return null; }
+    var raw = window.marked.parse(editor.value, { gfm: true, breaks: false });
+    return window.DOMPurify.sanitize(raw);
+  }
+
+  function escapeHTML(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function update() {
+    var html = renderHTML();
+    if (html === null) {
+      preview.innerHTML = '<p style="color:#c92621"><strong>Preview unavailable.</strong> The Markdown library could not be loaded. Check your connection and reload.</p><pre>' + escapeHTML(editor.value) + '</pre>';
+    } else {
+      preview.innerHTML = html;
+      var links = preview.querySelectorAll('a[href]');
+      for (var i = 0; i < links.length; i++) {
+        links[i].setAttribute('target', '_blank');
+        links[i].setAttribute('rel', 'noopener noreferrer');
+      }
+    }
+    var text = editor.value.trim();
+    var words = text ? text.split(/\s+/).length : 0;
+    counter.textContent = words + ' word' + (words === 1 ? '' : 's') + ' · ' + editor.value.length + ' characters';
+  }
+
+  function say(msg, isError) {
+    statusEl.textContent = msg;
+    statusEl.className = 'status' + (isError ? ' error' : '');
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(function () { statusEl.textContent = ''; }, 3500);
+  }
+
+  /* Toolbar insertion */
+  function replaceSelection(before, after, placeholder) {
+    var start = editor.selectionStart, end = editor.selectionEnd;
+    var selected = editor.value.substring(start, end) || placeholder;
+    var insert = before + selected + after;
+    editor.focus();
+    editor.setRangeText(insert, start, end, 'end');
+    editor.setSelectionRange(start + before.length, start + before.length + selected.length);
+    update();
+  }
+
+  function linePrefix(prefixFn, placeholder) {
+    var start = editor.selectionStart, end = editor.selectionEnd;
+    var value = editor.value;
+    var lineStart = value.lastIndexOf('\n', start - 1) + 1;
+    var lineEndIdx = value.indexOf('\n', end);
+    if (lineEndIdx === -1) { lineEndIdx = value.length; }
+    var block = value.substring(lineStart, lineEndIdx) || placeholder;
+    var out = block.split('\n').map(prefixFn).join('\n');
+    editor.focus();
+    editor.setRangeText(out, lineStart, lineEndIdx, 'select');
+    update();
+  }
+
+  var actions = {
+    heading: function () { linePrefix(function (l) { return '## ' + l.replace(/^#{1,6}\s+/, ''); }, 'Heading'); },
+    bold: function () { replaceSelection('**', '**', 'bold text'); },
+    italic: function () { replaceSelection('*', '*', 'italic text'); },
+    link: function () {
+      var start = editor.selectionStart, end = editor.selectionEnd;
+      var label = editor.value.substring(start, end) || 'link text';
+      var url = 'https://example.com';
+      editor.focus();
+      editor.setRangeText('[' + label + '](' + url + ')', start, end, 'end');
+      var urlStart = start + label.length + 3;
+      editor.setSelectionRange(urlStart, urlStart + url.length);
+      update();
+    },
+    code: function () {
+      var start = editor.selectionStart, end = editor.selectionEnd;
+      var selected = editor.value.substring(start, end) || 'your code here';
+      var lead = (start > 0 && editor.value.charAt(start - 1) !== '\n') ? '\n' : '';
+      var insert = lead + '```\n' + selected + '\n```\n';
+      editor.focus();
+      editor.setRangeText(insert, start, end, 'end');
+      var s = start + lead.length + 4;
+      editor.setSelectionRange(s, s + selected.length);
+      update();
+    },
+    list: function () { linePrefix(function (l) { return '- ' + l.replace(/^[-*+]\s+/, ''); }, 'List item'); }
+  };
+
+  var tools = document.querySelectorAll('[data-action]');
+  for (var i = 0; i < tools.length; i++) {
+    tools[i].addEventListener('click', function () { actions[this.getAttribute('data-action')](); });
+  }
+
+  /* Clipboard + download helpers */
+  function copyText(text, label) {
+    if (!text) { say('Nothing to copy yet. Add some Markdown first.', true); return; }
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      document.body.removeChild(ta);
+      say(ok ? label + ' copied to clipboard.' : 'Copy failed. Select the text and copy it manually.', !ok);
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(function () { say(label + ' copied to clipboard.'); }, fallback);
+    } else { fallback(); }
+  }
+
+  function download(filename, content, type) {
+    var blob = new Blob([content], { type: type });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    say(filename + ' downloaded.');
+  }
+
+  function firstHeading() {
+    var m = editor.value.match(/^\s*#{1,6}\s+(.+)$/m);
+    return m ? m[1].replace(/[*_`]/g, '').trim() : 'Markdown Export';
+  }
+
+  function standaloneHTML(body) {
+    var css = 'body{max-width:760px;margin:40px auto;padding:0 20px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.6;color:#1f2933}' +
+      'h1,h2{border-bottom:1px solid #e3e6eb;padding-bottom:.3em}' +
+      'code{background:#f1f3f5;padding:2px 6px;border-radius:5px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9em}' +
+      'pre{background:#1f2933;color:#f4f5f7;padding:14px;border-radius:8px;overflow:auto}pre code{background:none;padding:0;color:inherit}' +
+      'blockquote{margin:1em 0;padding:4px 16px;border-left:4px solid #e3e6eb;color:#66707d}' +
+      'table{border-collapse:collapse;width:100%}th,td{border:1px solid #e3e6eb;padding:8px 12px;text-align:left}th{background:#fafbfc}img{max-width:100%}';
+    return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>' +
+      escapeHTML(firstHeading()) + '</title>\n<style>' + css + '</style>\n</head>\n<body>\n' + body + '\n</body>\n</html>\n';
+  }
+
+  function needHTML() {
+    var html = renderHTML();
+    if (html === null) { say('The Markdown library failed to load. Reload the page and try again.', true); return null; }
+    if (!editor.value.trim()) { say('Nothing to export yet. Add some Markdown first.', true); return null; }
+    return html;
+  }
+
+  document.getElementById('copyMd').addEventListener('click', function () { copyText(editor.value, 'Markdown'); });
+  document.getElementById('copyHtml').addEventListener('click', function () {
+    var html = needHTML(); if (html !== null) { copyText(html, 'Rendered HTML'); }
+  });
+  document.getElementById('dlMd').addEventListener('click', function () {
+    if (!editor.value.trim()) { say('Nothing to export yet. Add some Markdown first.', true); return; }
+    download('document.md', editor.value, 'text/markdown;charset=utf-8');
+  });
+  document.getElementById('dlHtml').addEventListener('click', function () {
+    var html = needHTML(); if (html !== null) { download('document.html', standaloneHTML(html), 'text/html;charset=utf-8'); }
+  });
+  document.getElementById('sampleBtn').addEventListener('click', function () {
+    editor.value = SAMPLE; update(); editor.focus(); say('Sample Markdown loaded.');
+  });
+  document.getElementById('clearBtn').addEventListener('click', function () {
+    editor.value = ''; update(); editor.focus();
+  });
+
+  editor.addEventListener('input', update);
+
+  /* Start with the sample so the preview is never empty on first load */
+  editor.value = SAMPLE;
+  if (librariesReady()) { update(); }
+  else { window.addEventListener('load', update); }
+})();
+</script>
+</body>
+</html>

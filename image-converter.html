@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BurlPDF – Convert PNG, JPG, WEBP and BMP online</title>
+<meta name="description" content="Convert images between PNG, JPG, WEBP and BMP directly in your browser. Nothing is uploaded.">
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --border: #e3e6ea;
+    --text: #2f3640;
+    --muted: #6b7480;
+    --accent: #e5322d;
+    --accent-dark: #c9231f;
+    --accent-soft: #fdeceb;
+    --ok: #1f8a4c;
+    --radius: 12px;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+  }
+  a { color: var(--accent); }
+  button, select, input { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid rgba(229, 50, 45, .45); outline-offset: 2px; }
+
+  /* Navbar */
+  .navbar {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .navbar-inner {
+    max-width: 1000px; margin: 0 auto; padding: 0 20px; height: 60px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .brand { font-weight: 700; font-size: 18px; color: var(--text); text-decoration: none; }
+  .back-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: 8px;
+    color: var(--text); text-decoration: none; font-weight: 600; font-size: 14px;
+  }
+  .back-link:hover { background: var(--bg); }
+
+  /* Layout */
+  main { max-width: 1000px; margin: 0 auto; padding: 36px 20px 64px; }
+  .hero { text-align: center; margin-bottom: 28px; }
+  .hero h1 { margin: 0 0 8px; font-size: clamp(28px, 5vw, 38px); line-height: 1.2; letter-spacing: -.01em; }
+  .hero p { margin: 0 auto; max-width: 560px; color: var(--muted); font-size: 17px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  /* Drop zone */
+  .dropzone {
+    border: 2px dashed #cdd2d9;
+    border-radius: var(--radius);
+    background: #fafbfc;
+    padding: 44px 20px;
+    text-align: center;
+    transition: border-color .15s, background .15s;
+  }
+  .dropzone.dragover { border-color: var(--accent); background: var(--accent-soft); }
+  .dropzone h2 { margin: 0 0 6px; font-size: 20px; }
+  .dropzone p { margin: 0 0 18px; color: var(--muted); font-size: 15px; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border: 1px solid transparent; border-radius: 8px;
+    padding: 10px 18px; font-weight: 600; font-size: 15px; cursor: pointer;
+    background: var(--accent); color: #fff;
+    transition: background .15s;
+  }
+  .btn:hover:not(:disabled) { background: var(--accent-dark); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-large { padding: 14px 28px; font-size: 17px; }
+  .btn-secondary { background: #fff; color: var(--text); border-color: var(--border); }
+  .btn-secondary:hover:not(:disabled) { background: var(--bg); }
+  .btn-small { padding: 7px 12px; font-size: 14px; }
+
+  /* Settings */
+  .settings { display: flex; flex-wrap: wrap; gap: 20px 32px; align-items: flex-end; margin-top: 20px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-weight: 600; font-size: 14px; }
+  select {
+    border: 1px solid var(--border); border-radius: 8px; background: #fff;
+    padding: 9px 12px; min-width: 140px; cursor: pointer;
+  }
+  .quality-field { flex: 1 1 260px; max-width: 420px; }
+  .quality-row { display: flex; align-items: center; gap: 12px; }
+  input[type="range"] { flex: 1; accent-color: var(--accent); }
+  .quality-value { min-width: 44px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .hint { color: var(--muted); font-size: 13px; margin: 0; }
+
+  .notice {
+    margin: 16px 0 0; padding: 10px 14px; border-radius: 8px;
+    background: #fff6e5; border: 1px solid #f3dca8; color: #7a5200; font-size: 14px;
+  }
+
+  /* File list */
+  .list-head {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+    margin-bottom: 16px;
+  }
+  .list-head h2 { margin: 0; font-size: 18px; }
+  .list-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .files { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .row {
+    display: flex; align-items: center; gap: 14px;
+    border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; background: #fff;
+  }
+  .thumb {
+    width: 52px; height: 52px; flex: none; border-radius: 8px; object-fit: cover;
+    background: repeating-conic-gradient(#eceef1 0% 25%, #fff 0% 50%) 50% / 12px 12px;
+    border: 1px solid var(--border);
+  }
+  .meta { flex: 1; min-width: 0; }
+  .name { font-weight: 600; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sub { font-size: 13px; color: var(--muted); }
+  .sub.err { color: var(--accent-dark); }
+  .sub .saved { color: var(--ok); font-weight: 600; }
+  .row-actions { display: flex; align-items: center; gap: 8px; flex: none; }
+  .icon-btn {
+    width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border);
+    background: #fff; cursor: pointer; font-size: 18px; line-height: 1; color: var(--muted);
+  }
+  .icon-btn:hover { background: var(--bg); color: var(--text); }
+  .spinner {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid var(--border); border-top-color: var(--accent);
+    animation: spin .8s linear infinite; display: inline-block; vertical-align: -3px; margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.5s; } }
+
+  /* Info sections */
+  .section-title { margin: 40px 0 16px; font-size: 24px; text-align: center; }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .step { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .step-num {
+    width: 32px; height: 32px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-dark);
+    display: flex; align-items: center; justify-content: center; font-weight: 700; margin-bottom: 10px;
+  }
+  .step h3 { margin: 0 0 6px; font-size: 17px; }
+  .step p { margin: 0; color: var(--muted); font-size: 15px; }
+
+  .faq { padding: 8px 24px; }
+  details { border-bottom: 1px solid var(--border); padding: 14px 0; }
+  details:last-child { border-bottom: 0; }
+  summary { cursor: pointer; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; font-size: 20px; line-height: 1; color: var(--muted); }
+  details[open] summary::after { content: "\2212"; }
+  details p { margin: 10px 0 0; color: var(--muted); font-size: 15px; max-width: 75ch; }
+
+  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 0 20px 32px; }
+
+  @media (max-width: 560px) {
+    .card { padding: 16px; }
+    .row { flex-wrap: wrap; }
+    .row-actions { width: 100%; justify-content: flex-end; }
+    .quality-field { max-width: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a class="brand" href="index.html">BurlPDF</a>
+    <a class="back-link" href="index.html">&larr; Back to all tools</a>
+  </div>
+</nav>
+
+<main>
+  <header class="hero">
+    <h1>Convert images between PNG, JPG, WEBP and BMP</h1>
+    <p>Everything runs in your browser. Your images are never uploaded to a server.</p>
+  </header>
+
+  <section class="card" aria-label="Image converter">
+    <div class="dropzone" id="dropzone">
+      <h2>Drop your images here</h2>
+      <p>PNG, JPG, WEBP or BMP. Add as many as you like.</p>
+      <button type="button" class="btn btn-large" id="pickBtn">Select images</button>
+      <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/bmp,.png,.jpg,.jpeg,.webp,.bmp" multiple hidden>
+    </div>
+
+    <div class="settings">
+      <div class="field">
+        <label for="format">Convert to</label>
+        <select id="format">
+          <option value="png">PNG</option>
+          <option value="jpg" selected>JPG</option>
+          <option value="webp">WEBP</option>
+          <option value="bmp">BMP</option>
+        </select>
+      </div>
+      <div class="field quality-field" id="qualityField">
+        <label for="quality">Quality</label>
+        <div class="quality-row">
+          <input type="range" id="quality" min="10" max="100" step="1" value="90">
+          <span class="quality-value" id="qualityValue">90%</span>
+        </div>
+        <p class="hint">Lower quality makes smaller files.</p>
+      </div>
+    </div>
+    <p class="hint" id="formatHint" style="margin-top:14px"></p>
+    <div class="notice" id="notice" role="status" hidden></div>
+  </section>
+
+  <section class="card" id="listCard" hidden aria-label="Converted images">
+    <div class="list-head">
+      <h2 id="listTitle">Your images</h2>
+      <div class="list-actions">
+        <button type="button" class="btn btn-secondary btn-small" id="clearBtn">Clear all</button>
+        <button type="button" class="btn" id="zipBtn">Download All as ZIP</button>
+      </div>
+    </div>
+    <ul class="files" id="files"></ul>
+  </section>
+
+  <h2 class="section-title">How it works</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3>Add your images</h3>
+      <p>Drag files onto the box above or choose them from your device. PNG, JPG, WEBP and BMP are supported.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3>Pick a format</h3>
+      <p>Choose PNG, JPG, WEBP or BMP. For JPG and WEBP, set the quality you want.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3>Download</h3>
+      <p>Save each image on its own, or grab everything in one ZIP file.</p>
+    </div>
+  </div>
+
+  <h2 class="section-title">Frequently asked questions</h2>
+  <section class="card faq">
+    <details>
+      <summary>Are my images uploaded anywhere?</summary>
+      <p>No. Conversion happens on your device using your browser’s canvas. Your files never leave your computer or phone, and nothing is stored once you close the page.</p>
+    </details>
+    <details>
+      <summary>What happens to transparency?</summary>
+      <p>PNG and WEBP keep transparent areas. JPG and BMP don’t support transparency here, so transparent areas are filled with white.</p>
+    </details>
+    <details>
+      <summary>Which quality setting should I use?</summary>
+      <p>Around 80–90% is a good balance for photos: the file gets much smaller and the difference is hard to see. Use 100% if you need the best possible result. Quality only applies to JPG and WEBP.</p>
+    </details>
+    <details>
+      <summary>Why can’t I convert to WEBP in my browser?</summary>
+      <p>Some browsers, mainly older versions of Safari, can open WEBP images but can’t create them. If you see an error, try a current version of Chrome, Edge, Firefox or Safari, or choose another format.</p>
+    </details>
+    <details>
+      <summary>Is there a limit on how many images I can convert?</summary>
+      <p>There’s no fixed limit. Very large images or very large batches use your device’s memory, so if things slow down, convert in smaller groups.</p>
+    </details>
+    <details>
+      <summary>Will converting change my original files?</summary>
+      <p>No. Your originals stay exactly as they are. You download new files with the same name and the new extension.</p>
+    </details>
+  </section>
+</main>
+
+<footer>Converted locally in your browser. No uploads.</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var FORMATS = {
+    png:  { label: 'PNG',  mime: 'image/png',  ext: 'png',  lossy: false },
+    jpg:  { label: 'JPG',  mime: 'image/jpeg', ext: 'jpg',  lossy: true  },
+    webp: { label: 'WEBP', mime: 'image/webp', ext: 'webp', lossy: true  },
+    bmp:  { label: 'BMP',  mime: 'image/bmp',  ext: 'bmp',  lossy: false }
+  };
+  var ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/bmp'];
+  var ACCEPTED_EXT = /\.(png|jpe?g|webp|bmp)$/i;
+  var HINTS = {
+    png: 'PNG is lossless and keeps transparency.',
+    jpg: 'JPG makes small files for photos. Transparent areas become white.',
+    webp: 'WEBP gives small files and keeps transparency.',
+    bmp: 'BMP is uncompressed, so files will be large. Transparent areas become white.'
+  };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var dropzone = $('dropzone'), fileInput = $('fileInput'), pickBtn = $('pickBtn');
+  var formatSel = $('format'), qualityInput = $('quality'), qualityValue = $('qualityValue');
+  var qualityField = $('qualityField'), formatHint = $('formatHint'), notice = $('notice');
+  var listCard = $('listCard'), listTitle = $('listTitle'), filesEl = $('files');
+  var zipBtn = $('zipBtn'), clearBtn = $('clearBtn');
+
+  var items = [];
+  var nextId = 1;
+  var qualityTimer = null;
+
+  /* ---------- helpers ---------- */
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function fmtSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(bytes < 10240 ? 1 : 0) + ' KB';
+    return (bytes / 1048576).toFixed(2) + ' MB';
+  }
+  function baseName(name) {
+    var i = name.lastIndexOf('.');
+    return i > 0 ? name.slice(0, i) : name;
+  }
+  function outName(it) {
+    return baseName(it.file.name) + '.' + FORMATS[formatSel.value].ext;
+  }
+  function showNotice(msg) {
+    if (!msg) { notice.hidden = true; notice.textContent = ''; return; }
+    notice.textContent = msg;
+    notice.hidden = false;
+  }
+  function isAccepted(file) {
+    return ACCEPTED_TYPES.indexOf(file.type) !== -1 || (!file.type && ACCEPTED_EXT.test(file.name));
+  }
+  function triggerDownload(blob, filename) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+  }
+
+  /* ---------- BMP encoder (24-bit, uncompressed) ---------- */
+  function encodeBMP(canvas) {
+    var w = canvas.width, h = canvas.height;
+    var data = canvas.getContext('2d').getImageData(0, 0, w, h).data;
+    var rowSize = Math.ceil((w * 3) / 4) * 4;
+    var pixelBytes = rowSize * h;
+    var buffer = new ArrayBuffer(54 + pixelBytes);
+    var v = new DataView(buffer);
+    v.setUint8(0, 0x42); v.setUint8(1, 0x4D);          // "BM"
+    v.setUint32(2, 54 + pixelBytes, true);              // file size
+    v.setUint32(6, 0, true);                            // reserved
+    v.setUint32(10, 54, true);                          // pixel data offset
+    v.setUint32(14, 40, true);                          // DIB header size
+    v.setInt32(18, w, true);
+    v.setInt32(22, h, true);                            // positive = bottom-up
+    v.setUint16(26, 1, true);                           // planes
+    v.setUint16(28, 24, true);                          // bits per pixel
+    v.setUint32(30, 0, true);                           // no compression
+    v.setUint32(34, pixelBytes, true);
+    v.setInt32(38, 2835, true);                         // ~72 DPI
+    v.setInt32(42, 2835, true);
+    v.setUint32(46, 0, true);
+    v.setUint32(50, 0, true);
+    var out = new Uint8Array(buffer);
+    var pos = 54;
+    for (var y = h - 1; y >= 0; y--) {
+      var rowStart = pos;
+      for (var x = 0; x < w; x++) {
+        var i = (y * w + x) * 4;
+        out[pos++] = data[i + 2];
+        out[pos++] = data[i + 1];
+        out[pos++] = data[i];
+      }
+      pos = rowStart + rowSize;
+    }
+    return new Blob([buffer], { type: 'image/bmp' });
+  }
+
+  /* ---------- conversion ---------- */
+  function loadImage(url) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      img.onload = function () { resolve(img); };
+      img.onerror = function () { reject(new Error('This file couldn’t be read as an image.')); };
+      img.src = url;
+    });
+  }
+
+  function canvasToBlob(canvas, mime, quality) {
+    return new Promise(function (resolve) { canvas.toBlob(resolve, mime, quality); });
+  }
+
+  async function convertItem(it) {
+    var gen = ++it.gen;
+    it.status = 'working';
+    it.error = '';
+    render();
+    try {
+      var fmtKey = formatSel.value;
+      var fmt = FORMATS[fmtKey];
+      var img = await loadImage(it.srcUrl);
+      var w = img.naturalWidth, h = img.naturalHeight;
+      if (!w || !h) throw new Error('This image has no readable size.');
+      it.width = w; it.height = h;
+
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Your browser couldn’t create a drawing surface for this image.');
+      if (fmtKey === 'jpg' || fmtKey === 'bmp') {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, w, h);
+      }
+      ctx.drawImage(img, 0, 0);
+
+      var blob;
+      if (fmtKey === 'bmp') {
+        blob = encodeBMP(canvas);
+      } else {
+        var q = fmt.lossy ? Number(qualityInput.value) / 100 : undefined;
+        blob = await canvasToBlob(canvas, fmt.mime, q);
+        if (!blob) throw new Error('The image is too large to convert in this browser.');
+        if (blob.type !== fmt.mime) throw new Error('This browser can’t export ' + fmt.label + ' files. Try another format or browser.');
+      }
+
+      if (gen !== it.gen) return; // a newer conversion superseded this one
+      it.blob = blob;
+      it.outName = outName(it);
+      it.fmtLabel = fmt.label;
+      it.status = 'done';
+    } catch (err) {
+      if (gen !== it.gen) return;
+      it.blob = null;
+      it.status = 'error';
+      it.error = (err && err.message) ? err.message : 'Conversion failed.';
+    }
+    render();
+  }
+
+  function convertAll() { items.forEach(convertItem); }
+
+  /* ---------- adding files ---------- */
+  function addFiles(fileList) {
+    var rejected = 0, added = 0;
+    Array.prototype.forEach.call(fileList, function (file) {
+      if (!isAccepted(file)) { rejected++; return; }
+      var it = {
+        id: nextId++, file: file, srcUrl: URL.createObjectURL(file),
+        status: 'working', error: '', blob: null, gen: 0,
+        width: 0, height: 0, outName: '', fmtLabel: ''
+      };
+      items.push(it);
+      added++;
+      convertItem(it);
+    });
+    if (rejected) {
+      showNotice(rejected + (rejected === 1 ? ' file was' : ' files were') + ' skipped because only PNG, JPG, WEBP and BMP images are supported.');
+    } else {
+      showNotice('');
+    }
+    if (added) render();
+  }
+
+  /* ---------- rendering ---------- */
+  function render() {
+    listCard.hidden = items.length === 0;
+    if (!items.length) { filesEl.innerHTML = ''; return; }
+
+    var done = items.filter(function (i) { return i.status === 'done'; }).length;
+    var busy = items.some(function (i) { return i.status === 'working'; });
+    listTitle.textContent = items.length + (items.length === 1 ? ' image' : ' images') +
+      (busy ? ' · converting…' : ' · ' + done + ' ready');
+    zipBtn.disabled = busy || done === 0;
+
+    filesEl.innerHTML = items.map(function (it) {
+      var sub, actions = '';
+      if (it.status === 'working') {
+        sub = '<div class="sub"><span class="spinner" aria-hidden="true"></span>Converting…</div>';
+      } else if (it.status === 'error') {
+        sub = '<div class="sub err">' + esc(it.error) + '</div>';
+      } else {
+        var diff = Math.round((1 - it.blob.size / it.file.size) * 100);
+        var diffTxt = diff > 0 ? ' <span class="saved">(' + diff + '% smaller)</span>'
+                    : diff < 0 ? ' (' + Math.abs(diff) + '% larger)' : '';
+        sub = '<div class="sub">' + it.width + ' × ' + it.height + ' px · ' +
+              fmtSize(it.file.size) + ' → ' + fmtSize(it.blob.size) + diffTxt + '</div>';
+        actions = '<button type="button" class="btn btn-small" data-action="download" data-id="' + it.id + '">Download ' + esc(it.fmtLabel) + '</button>';
+      }
+      return '<li class="row">' +
+        '<img class="thumb" src="' + it.srcUrl + '" alt="">' +
+        '<div class="meta"><div class="name" title="' + esc(it.file.name) + '">' + esc(it.file.name) + '</div>' + sub + '</div>' +
+        '<div class="row-actions">' + actions +
+        '<button type="button" class="icon-btn" data-action="remove" data-id="' + it.id + '" aria-label="Remove ' + esc(it.file.name) + '" title="Remove">&times;</button>' +
+        '</div></li>';
+    }).join('');
+  }
+
+  function findItem(id) {
+    for (var i = 0; i < items.length; i++) if (items[i].id === id) return items[i];
+    return null;
+  }
+
+  /* ---------- events ---------- */
+  pickBtn.addEventListener('click', function () { fileInput.click(); });
+  fileInput.addEventListener('change', function () {
+    if (fileInput.files.length) addFiles(fileInput.files);
+    fileInput.value = '';
+  });
+
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    dropzone.addEventListener(ev, function (e) {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    dropzone.addEventListener(ev, function (e) {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+    });
+  });
+  dropzone.addEventListener('drop', function (e) {
+    if (e.dataTransfer && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+  });
+  // Stop the browser from opening files dropped outside the drop zone
+  window.addEventListener('dragover', function (e) { e.preventDefault(); });
+  window.addEventListener('drop', function (e) { e.preventDefault(); });
+
+  function updateSettingsUI() {
+    var fmt = FORMATS[formatSel.value];
+    qualityField.hidden = !fmt.lossy;
+    formatHint.textContent = HINTS[formatSel.value];
+  }
+  formatSel.addEventListener('change', function () {
+    updateSettingsUI();
+    convertAll();
+  });
+  qualityInput.addEventListener('input', function () {
+    qualityValue.textContent = qualityInput.value + '%';
+    clearTimeout(qualityTimer);
+    qualityTimer = setTimeout(convertAll, 250);
+  });
+
+  filesEl.addEventListener('click', function (e) {
+    var btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    var it = findItem(Number(btn.getAttribute('data-id')));
+    if (!it) return;
+    if (btn.getAttribute('data-action') === 'download' && it.blob) {
+      triggerDownload(it.blob, it.outName);
+    } else if (btn.getAttribute('data-action') === 'remove') {
+      it.gen++; // cancel any pending conversion
+      URL.revokeObjectURL(it.srcUrl);
+      items = items.filter(function (x) { return x !== it; });
+      render();
+    }
+  });
+
+  clearBtn.addEventListener('click', function () {
+    items.forEach(function (it) { it.gen++; URL.revokeObjectURL(it.srcUrl); });
+    items = [];
+    showNotice('');
+    render();
+  });
+
+  zipBtn.addEventListener('click', async function () {
+    if (typeof JSZip === 'undefined') {
+      showNotice('The ZIP library couldn’t load. Check your internet connection and reload the page, or download the images one by one.');
+      return;
+    }
+    var ready = items.filter(function (i) { return i.status === 'done' && i.blob; });
+    if (!ready.length) return;
+    var label = zipBtn.textContent;
+    zipBtn.disabled = true;
+    zipBtn.textContent = 'Creating ZIP…';
+    try {
+      var zip = new JSZip();
+      var used = {};
+      ready.forEach(function (it) {
+        var name = it.outName;
+        if (used[name.toLowerCase()]) {
+          var dot = name.lastIndexOf('.');
+          var stem = name.slice(0, dot), ext = name.slice(dot);
+          var n = 2;
+          while (used[(stem + ' (' + n + ')' + ext).toLowerCase()]) n++;
+          name = stem + ' (' + n + ')' + ext;
+        }
+        used[name.toLowerCase()] = true;
+        zip.file(name, it.blob, { binary: true });
+      });
+      var blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
+      triggerDownload(blob, 'converted-images.zip');
+    } catch (err) {
+      showNotice('Couldn’t create the ZIP file. Try downloading the images one by one.');
+    } finally {
+      zipBtn.textContent = label;
+      render();
+    }
+  });
+
+  updateSettingsUI();
+})();
+</script>
+</body>
+</html>

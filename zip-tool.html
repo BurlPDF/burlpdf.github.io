@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZIP Tool – Create &amp; Extract ZIP Archives Online</title>
+<meta name="description" content="Create and extract ZIP archives right in your browser. Files never leave your device.">
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --border: #e2e5ea;
+    --text: #1f2933;
+    --muted: #6b7684;
+    --accent: #e5322d;
+    --accent-dark: #c4231f;
+    --accent-soft: #fdecec;
+    --ok: #1a7f4b;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+  }
+  .navbar {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .navbar-inner {
+    max-width: 1100px; margin: 0 auto; padding: 0 20px;
+    height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .brand { font-weight: 800; font-size: 20px; color: var(--text); text-decoration: none; letter-spacing: -0.3px; }
+  .brand span { color: var(--accent); }
+  .nav-links { display: flex; gap: 6px; }
+  .nav-links a {
+    color: var(--text); text-decoration: none; font-weight: 600; font-size: 14px;
+    padding: 8px 14px; border-radius: 8px;
+  }
+  .nav-links a:hover { background: var(--bg); }
+  .nav-links a.current { color: var(--accent); }
+  a:focus-visible, button:focus-visible, input:focus-visible, .dropzone:focus-visible {
+    outline: 3px solid rgba(229, 50, 45, 0.35); outline-offset: 2px;
+  }
+
+  main { max-width: 860px; margin: 0 auto; padding: 40px 20px 64px; }
+  .hero { text-align: center; margin-bottom: 28px; }
+  .hero h1 { margin: 0 0 8px; font-size: 34px; letter-spacing: -0.6px; }
+  .hero p { margin: 0 auto; color: var(--muted); max-width: 560px; font-size: 17px; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  }
+  .tabs { display: flex; gap: 6px; padding: 6px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 22px; }
+  .tab {
+    flex: 1; border: 0; background: transparent; padding: 11px 12px; border-radius: 7px;
+    font: inherit; font-weight: 700; font-size: 15px; color: var(--muted); cursor: pointer;
+  }
+  .tab:hover { color: var(--text); }
+  .tab[aria-selected="true"] { background: #fff; color: var(--accent); box-shadow: 0 1px 3px rgba(16, 24, 40, 0.12); }
+  .panel[hidden] { display: none; }
+
+  .dropzone {
+    border: 2px dashed #c9ced6; border-radius: var(--radius); background: #fafbfc;
+    padding: 36px 20px; text-align: center; cursor: pointer; transition: border-color .15s, background .15s;
+  }
+  .dropzone:hover, .dropzone.drag { border-color: var(--accent); background: var(--accent-soft); }
+  .dropzone svg { width: 44px; height: 44px; color: var(--accent); }
+  .dropzone strong { display: block; font-size: 17px; margin-top: 8px; }
+  .dropzone small { color: var(--muted); }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border: 1px solid var(--accent); background: var(--accent); color: #fff;
+    font: inherit; font-weight: 700; font-size: 15px; padding: 11px 20px; border-radius: 9px; cursor: pointer;
+  }
+  .btn:hover:not(:disabled) { background: var(--accent-dark); border-color: var(--accent-dark); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.secondary { background: #fff; color: var(--text); border-color: var(--border); }
+  .btn.secondary:hover:not(:disabled) { background: var(--bg); border-color: #cfd4db; }
+  .btn.small { padding: 6px 12px; font-size: 13px; border-radius: 7px; }
+  .btn.big { padding: 14px 26px; font-size: 16px; }
+
+  .field { margin-top: 20px; }
+  .field label { display: block; font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  .field input[type="text"] {
+    width: 100%; max-width: 360px; padding: 10px 12px; font: inherit;
+    border: 1px solid var(--border); border-radius: 8px; background: #fff; color: var(--text);
+  }
+
+  .list-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 22px 0 8px; flex-wrap: wrap; }
+  .list-head h3 { margin: 0; font-size: 16px; }
+  .list-head .meta { color: var(--muted); font-size: 13px; font-weight: 500; margin-left: 6px; }
+  .file-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; max-height: 340px; overflow-y: auto; }
+  .file-list li { display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: #fff; border-bottom: 1px solid var(--border); }
+  .file-list li:last-child { border-bottom: 0; }
+  .file-name { flex: 1; min-width: 0; font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-size { color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .remove-btn {
+    border: 0; background: transparent; color: var(--muted); font-size: 20px; line-height: 1;
+    width: 30px; height: 30px; border-radius: 6px; cursor: pointer;
+  }
+  .remove-btn:hover { background: var(--accent-soft); color: var(--accent); }
+
+  .actions { margin-top: 22px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .progress { height: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 99px; overflow: hidden; margin-top: 16px; }
+  .progress > div { height: 100%; width: 0; background: var(--accent); transition: width .1s; }
+  .status { margin-top: 14px; font-size: 14px; font-weight: 600; min-height: 20px; }
+  .status.ok { color: var(--ok); }
+  .status.err { color: var(--accent-dark); }
+  .status.info { color: var(--muted); }
+  .empty { color: var(--muted); font-size: 14px; text-align: center; padding: 18px 0 0; }
+
+  .privacy {
+    margin-top: 18px; padding: 12px 14px; background: #f0faf5; border: 1px solid #cdeedd; color: #17623c;
+    border-radius: 10px; font-size: 14px;
+  }
+
+  section.info { margin-top: 32px; }
+  section.info h2 { margin: 0 0 16px; font-size: 22px; letter-spacing: -0.3px; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .step { border: 1px solid var(--border); border-radius: 10px; padding: 16px; background: #fafbfc; }
+  .step h3 { margin: 0 0 6px; font-size: 15px; }
+  .step p { margin: 0; color: var(--muted); font-size: 14px; }
+  .step .n {
+    display: inline-flex; width: 26px; height: 26px; border-radius: 50%; background: var(--accent);
+    color: #fff; font-weight: 700; font-size: 13px; align-items: center; justify-content: center; margin-bottom: 8px;
+  }
+  details { border: 1px solid var(--border); border-radius: 10px; background: #fff; margin-bottom: 10px; }
+  summary { cursor: pointer; padding: 14px 16px; font-weight: 700; font-size: 15px; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; color: var(--accent); font-size: 20px; line-height: 1; }
+  details[open] summary::after { content: "\2212"; }
+  details p { margin: 0; padding: 0 16px 16px; color: var(--muted); font-size: 14.5px; }
+
+  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 0 20px 36px; }
+
+  @media (max-width: 680px) {
+    .steps { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 28px; }
+    .card { padding: 18px; }
+    .tab { font-size: 14px; padding: 10px 6px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="navbar-inner">
+    <a class="brand" href="index.html">Burl<span>PDF</span></a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="index.html">Home</a>
+      <a href="zip-tool.html" class="current" aria-current="page">ZIP Tool</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="hero">
+    <h1>ZIP Tool</h1>
+    <p>Create or extract ZIP archives right in your browser. Your files never leave your device.</p>
+  </div>
+
+  <div class="card">
+    <div class="tabs" role="tablist" aria-label="ZIP mode">
+      <button class="tab" role="tab" id="tab-create" aria-selected="true" aria-controls="panel-create">Create ZIP Archive</button>
+      <button class="tab" role="tab" id="tab-extract" aria-selected="false" aria-controls="panel-extract" tabindex="-1">Extract ZIP Archive</button>
+    </div>
+
+    <!-- CREATE -->
+    <div class="panel" id="panel-create" role="tabpanel" aria-labelledby="tab-create">
+      <div class="dropzone" id="create-drop" tabindex="0" role="button" aria-label="Choose files to add to the ZIP">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <strong>Drag &amp; drop files here</strong>
+        <small>or click to choose files</small>
+      </div>
+      <input type="file" id="create-input" multiple hidden>
+
+      <div id="create-body" hidden>
+        <div class="list-head">
+          <h3>Files to add <span class="meta" id="create-meta"></span></h3>
+          <button class="btn secondary small" id="create-clear" type="button">Clear all</button>
+        </div>
+        <ul class="file-list" id="create-list"></ul>
+
+        <div class="field">
+          <label for="zip-name">Archive name</label>
+          <input type="text" id="zip-name" value="archive.zip" maxlength="120" autocomplete="off" spellcheck="false">
+        </div>
+
+        <div class="actions">
+          <button class="btn big" id="create-btn" type="button">Create &amp; Download ZIP</button>
+          <button class="btn secondary big" id="create-more" type="button">Add more files</button>
+        </div>
+        <div class="progress" id="create-progress" hidden><div></div></div>
+      </div>
+      <div class="status info" id="create-status" role="status" aria-live="polite"></div>
+    </div>
+
+    <!-- EXTRACT -->
+    <div class="panel" id="panel-extract" role="tabpanel" aria-labelledby="tab-extract" hidden>
+      <div class="dropzone" id="extract-drop" tabindex="0" role="button" aria-label="Choose a ZIP file to extract">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8v13H3V8"/><rect x="1" y="3" width="22" height="5" rx="1"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+        <strong>Drag &amp; drop a .zip file here</strong>
+        <small>or click to choose a ZIP archive</small>
+      </div>
+      <input type="file" id="extract-input" accept=".zip,application/zip,application/x-zip-compressed" hidden>
+
+      <div id="extract-body" hidden>
+        <div class="list-head">
+          <h3 id="extract-title">Archive contents <span class="meta" id="extract-meta"></span></h3>
+          <button class="btn secondary small" id="extract-reset" type="button">Choose another ZIP</button>
+        </div>
+        <ul class="file-list" id="extract-list"></ul>
+        <div class="actions">
+          <button class="btn big" id="extract-all" type="button">Download All Files</button>
+        </div>
+        <div class="progress" id="extract-progress" hidden><div></div></div>
+      </div>
+      <div class="status info" id="extract-status" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="privacy">🔒 100% private: everything runs locally in your browser. No files are uploaded to any server.</div>
+  </div>
+
+  <section class="info" id="how">
+    <h2>How It Works</h2>
+    <div class="steps">
+      <div class="step"><span class="n">1</span><h3>Add your files</h3><p>Drop files or a ZIP archive onto the box, or click it to browse your device.</p></div>
+      <div class="step"><span class="n">2</span><h3>Processed on your device</h3><p>Your browser compresses or unpacks the data using JavaScript. Nothing is sent over the internet.</p></div>
+      <div class="step"><span class="n">3</span><h3>Download the result</h3><p>Save the new ZIP, or download extracted files one at a time or all at once.</p></div>
+    </div>
+  </section>
+
+  <section class="info" id="faq">
+    <h2>FAQ</h2>
+    <details>
+      <summary>Are my files uploaded anywhere?</summary>
+      <p>No. The ZIP library runs entirely in your browser, so your files stay on your device. You can even disconnect from the internet after the page loads and it will keep working.</p>
+    </details>
+    <details>
+      <summary>Is there a file size limit?</summary>
+      <p>There is no fixed limit, but your browser has to hold everything in memory. Archives of a few hundred megabytes usually work well. Very large files may be slow or fail on phones and older computers.</p>
+    </details>
+    <details>
+      <summary>Why did my browser ask to allow multiple downloads?</summary>
+      <p>"Download All Files" saves each extracted file separately, so browsers may ask for permission to download multiple files. Choose Allow to receive them all.</p>
+    </details>
+    <details>
+      <summary>Can I open password-protected ZIP files?</summary>
+      <p>No. Encrypted archives aren't supported. Remove the password with the tool that created the archive first.</p>
+    </details>
+    <details>
+      <summary>Are folders kept inside the ZIP?</summary>
+      <p>When you create a ZIP, files are added at the top level of the archive. When you extract, the list shows each file's full path inside the archive, and downloaded files are saved by their file name.</p>
+    </details>
+  </section>
+</main>
+
+<footer>Files are processed locally and never leave your browser.</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---------- helpers ---------- */
+  function fmtSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    var units = ['KB', 'MB', 'GB', 'TB'], i = -1;
+    do { bytes /= 1024; i++; } while (bytes >= 1024 && i < units.length - 1);
+    return bytes.toFixed(bytes >= 100 ? 0 : 1) + ' ' + units[i];
+  }
+  function setStatus(el, msg, kind) { el.textContent = msg || ''; el.className = 'status ' + (kind || 'info'); }
+  function setProgress(wrap, pct) {
+    wrap.hidden = pct === null;
+    if (pct !== null) wrap.firstElementChild.style.width = Math.max(0, Math.min(100, pct)) + '%';
+  }
+  function baseName(path) { return path.split('/').filter(Boolean).pop() || path; }
+  function triggerDownload(blob, filename) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+  }
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function makeListItem(name, size, extraEl) {
+    var li = document.createElement('li');
+    var n = document.createElement('span'); n.className = 'file-name'; n.textContent = name; n.title = name;
+    var s = document.createElement('span'); s.className = 'file-size'; s.textContent = fmtSize(size);
+    li.appendChild(n); li.appendChild(s);
+    if (extraEl) li.appendChild(extraEl);
+    return li;
+  }
+  function wireDropzone(zone, input, onFiles) {
+    zone.addEventListener('click', function () { input.click(); });
+    zone.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); }
+    });
+    ['dragenter', 'dragover'].forEach(function (ev) {
+      zone.addEventListener(ev, function (e) { e.preventDefault(); zone.classList.add('drag'); });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+      zone.addEventListener(ev, function (e) { e.preventDefault(); zone.classList.remove('drag'); });
+    });
+    zone.addEventListener('drop', function (e) {
+      if (e.dataTransfer && e.dataTransfer.files.length) onFiles(Array.prototype.slice.call(e.dataTransfer.files));
+    });
+    input.addEventListener('change', function () {
+      if (input.files.length) onFiles(Array.prototype.slice.call(input.files));
+      input.value = '';
+    });
+  }
+
+  if (typeof JSZip === 'undefined') {
+    setStatus($('create-status'), 'The ZIP library could not be loaded. Check your internet connection and reload the page.', 'err');
+    setStatus($('extract-status'), 'The ZIP library could not be loaded. Check your internet connection and reload the page.', 'err');
+  }
+
+  /* ---------- tabs ---------- */
+  var tabs = [$('tab-create'), $('tab-extract')];
+  function selectTab(tab) {
+    tabs.forEach(function (t) {
+      var on = t === tab;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+      $(t.getAttribute('aria-controls')).hidden = !on;
+    });
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { selectTab(t); });
+    t.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        var next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+        selectTab(next); next.focus();
+      }
+    });
+  });
+
+  /* ---------- CREATE MODE ---------- */
+  var createFiles = [];
+  var createList = $('create-list');
+
+  function renderCreate() {
+    createList.innerHTML = '';
+    var total = 0;
+    createFiles.forEach(function (f, idx) {
+      total += f.size;
+      var rm = document.createElement('button');
+      rm.type = 'button'; rm.className = 'remove-btn'; rm.innerHTML = '&times;';
+      rm.setAttribute('aria-label', 'Remove ' + f.name);
+      rm.addEventListener('click', function () {
+        createFiles.splice(idx, 1);
+        renderCreate();
+        setStatus($('create-status'), '');
+      });
+      createList.appendChild(makeListItem(f.name, f.size, rm));
+    });
+    $('create-body').hidden = createFiles.length === 0;
+    $('create-drop').hidden = createFiles.length > 0;
+    $('create-meta').textContent = createFiles.length + (createFiles.length === 1 ? ' file' : ' files') + ' · ' + fmtSize(total);
+  }
+
+  function addCreateFiles(files) {
+    var added = 0;
+    files.forEach(function (f) {
+      var dup = createFiles.some(function (x) { return x.name === f.name && x.size === f.size && x.lastModified === f.lastModified; });
+      if (!dup) { createFiles.push(f); added++; }
+    });
+    renderCreate();
+    setProgress($('create-progress'), null);
+    setStatus($('create-status'), added < files.length ? 'Skipped ' + (files.length - added) + ' duplicate file(s).' : '', 'info');
+  }
+
+  wireDropzone($('create-drop'), $('create-input'), addCreateFiles);
+  $('create-more').addEventListener('click', function () { $('create-input').click(); });
+  $('create-clear').addEventListener('click', function () {
+    createFiles = []; renderCreate(); setProgress($('create-progress'), null); setStatus($('create-status'), '');
+  });
+  // Allow dropping more files onto the list area while files are loaded
+  ['dragover', 'drop'].forEach(function (ev) {
+    $('create-body').addEventListener(ev, function (e) {
+      e.preventDefault();
+      if (ev === 'drop' && e.dataTransfer && e.dataTransfer.files.length) addCreateFiles(Array.prototype.slice.call(e.dataTransfer.files));
+    });
+  });
+
+  function cleanZipName(raw) {
+    var name = (raw || '').replace(/[\\/:*?"<>|\u0000-\u001f]/g, '').trim();
+    if (!name) name = 'archive';
+    if (!/\.zip$/i.test(name)) name += '.zip';
+    return name;
+  }
+  $('zip-name').addEventListener('blur', function () { this.value = cleanZipName(this.value); });
+
+  $('create-btn').addEventListener('click', async function () {
+    if (!createFiles.length) return;
+    var btn = this, status = $('create-status'), prog = $('create-progress');
+    var filename = cleanZipName($('zip-name').value);
+    $('zip-name').value = filename;
+    btn.disabled = true;
+    setStatus(status, 'Creating ZIP…', 'info');
+    setProgress(prog, 0);
+    try {
+      var zip = new JSZip(), used = {};
+      createFiles.forEach(function (f) {
+        var name = f.name;
+        if (used[name]) {
+          var dot = name.lastIndexOf('.');
+          var stem = dot > 0 ? name.slice(0, dot) : name, ext = dot > 0 ? name.slice(dot) : '';
+          var n = used[name];
+          while (used[stem + ' (' + n + ')' + ext]) n++;
+          used[name] = n + 1;
+          name = stem + ' (' + n + ')' + ext;
+        }
+        used[name] = used[name] || 1;
+        zip.file(name, f, { date: new Date(f.lastModified || Date.now()) });
+      });
+      var blob = await zip.generateAsync(
+        { type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } },
+        function (meta) { setProgress(prog, meta.percent); }
+      );
+      triggerDownload(blob, filename);
+      setStatus(status, 'Done! ' + filename + ' (' + fmtSize(blob.size) + ') was created and downloaded.', 'ok');
+    } catch (err) {
+      setProgress(prog, null);
+      setStatus(status, 'Could not create the ZIP: ' + (err && err.message ? err.message : 'unknown error') + '. Try fewer or smaller files.', 'err');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  /* ---------- EXTRACT MODE ---------- */
+  var extracted = []; // { path, blob }
+  var extractToken = 0;
+
+  function resetExtract() {
+    extractToken++;
+    extracted = [];
+    $('extract-list').innerHTML = '';
+    $('extract-body').hidden = true;
+    $('extract-drop').hidden = false;
+    setProgress($('extract-progress'), null);
+    setStatus($('extract-status'), '');
+  }
+  $('extract-reset').addEventListener('click', resetExtract);
+
+  async function loadZip(files) {
+    var file = files[0], status = $('extract-status'), token = ++extractToken;
+    if (!/\.zip$/i.test(file.name) && file.type.indexOf('zip') === -1) {
+      setStatus(status, '"' + file.name + '" is not a ZIP file. Choose a file ending in .zip.', 'err');
+      return;
+    }
+    setStatus(status, 'Reading ' + file.name + '…', 'info');
+    try {
+      var zip = await JSZip.loadAsync(file);
+      var entries = Object.keys(zip.files).map(function (k) { return zip.files[k]; }).filter(function (e) { return !e.dir; });
+      if (!entries.length) { setStatus(status, 'This ZIP archive is empty.', 'err'); return; }
+
+      var prog = $('extract-progress'), results = [];
+      setProgress(prog, 0);
+      for (var i = 0; i < entries.length; i++) {
+        var blob = await entries[i].async('blob');
+        if (token !== extractToken) return;
+        results.push({ path: entries[i].name, blob: blob });
+        setProgress(prog, ((i + 1) / entries.length) * 100);
+        setStatus(status, 'Reading ' + (i + 1) + ' of ' + entries.length + ' files…', 'info');
+      }
+      extracted = results;
+      setProgress(prog, null);
+      renderExtract(file);
+      setStatus(status, '', 'info');
+    } catch (err) {
+      setProgress($('extract-progress'), null);
+      var msg = err && err.message ? err.message : '';
+      if (/encrypted/i.test(msg)) msg = 'This archive is password-protected, which is not supported.';
+      else msg = 'This file could not be read as a ZIP archive. It may be corrupted or not a real ZIP.';
+      setStatus(status, msg, 'err');
+    }
+  }
+
+  function renderExtract(file) {
+    var list = $('extract-list'), total = 0;
+    list.innerHTML = '';
+    extracted.forEach(function (item) {
+      total += item.blob.size;
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'btn small'; b.textContent = 'Download';
+      b.setAttribute('aria-label', 'Download ' + item.path);
+      b.addEventListener('click', function () { triggerDownload(item.blob, baseName(item.path)); });
+      list.appendChild(makeListItem(item.path, item.blob.size, b));
+    });
+    $('extract-meta').textContent = extracted.length + (extracted.length === 1 ? ' file' : ' files') + ' · ' + fmtSize(total) + ' · ' + file.name;
+    $('extract-body').hidden = false;
+    $('extract-drop').hidden = true;
+  }
+
+  wireDropzone($('extract-drop'), $('extract-input'), loadZip);
+
+  $('extract-all').addEventListener('click', async function () {
+    var btn = this, status = $('extract-status');
+    btn.disabled = true;
+    try {
+      for (var i = 0; i < extracted.length; i++) {
+        setStatus(status, 'Downloading ' + (i + 1) + ' of ' + extracted.length + '…', 'info');
+        triggerDownload(extracted[i].blob, baseName(extracted[i].path));
+        await wait(350);
+      }
+      setStatus(status, 'Done! ' + extracted.length + (extracted.length === 1 ? ' file was' : ' files were') + ' downloaded. If some are missing, allow multiple downloads in your browser.', 'ok');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // Prevent the browser from navigating away if a file is dropped outside a drop area
+  ['dragover', 'drop'].forEach(function (ev) {
+    window.addEventListener(ev, function (e) { e.preventDefault(); });
+  });
+
+  renderCreate();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BurlPDF – Clean and format text online</title>
+<meta name="description" content="Trim spaces, remove blank or duplicate lines, change case and strip line breaks. Runs entirely in your browser.">
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --border: #e3e5e9;
+    --border-strong: #cfd3d9;
+    --text: #33333b;
+    --muted: #6b7078;
+    --accent: #e5322d;
+    --accent-dark: #c92621;
+    --accent-soft: #fdecec;
+    --ok: #1f8a4c;
+    --radius: 12px;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+  }
+
+  /* Navbar */
+  .nav {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(20, 24, 31, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .nav-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 20px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 20px;
+    color: var(--text);
+    text-decoration: none;
+    letter-spacing: -0.01em;
+  }
+  .brand-mark {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 15px;
+    font-weight: 800;
+  }
+  .back-link {
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #fff;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .back-link:hover { background: var(--bg); border-color: var(--border-strong); }
+
+  /* Layout */
+  main { max-width: 1120px; margin: 0 auto; padding: 36px 20px 64px; }
+  .hero { text-align: center; margin-bottom: 28px; }
+  .hero h1 {
+    margin: 0 0 8px;
+    font-size: clamp(28px, 4vw, 38px);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    font-weight: 800;
+  }
+  .hero p { margin: 0 auto; max-width: 620px; color: var(--muted); font-size: 17px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 1px 2px rgba(20, 24, 31, 0.04);
+  }
+
+  /* Toolbar */
+  .toolbar { padding: 16px; margin-bottom: 16px; }
+  .toolbar-label { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--muted); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  button {
+    font: inherit;
+    cursor: pointer;
+    border-radius: 8px;
+    border: 1px solid var(--border-strong);
+    background: #fff;
+    color: var(--text);
+    padding: 9px 14px;
+    font-size: 14.5px;
+    font-weight: 600;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  button:hover:not(:disabled) { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-dark); }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  button:focus-visible, .back-link:focus-visible, .brand:focus-visible, summary:focus-visible, textarea:focus-visible {
+    outline: 3px solid rgba(229, 50, 45, 0.35);
+    outline-offset: 2px;
+  }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.primary:hover:not(:disabled) { background: var(--accent-dark); border-color: var(--accent-dark); color: #fff; }
+  button.primary.done { background: var(--ok); border-color: var(--ok); }
+  button.ghost { border-color: transparent; background: transparent; color: var(--muted); }
+  button.ghost:hover:not(:disabled) { background: var(--bg); border-color: var(--border); color: var(--text); }
+
+  /* Editor */
+  .editor { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .pane { padding: 16px; display: flex; flex-direction: column; }
+  .pane-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; margin-bottom: 10px; min-height: 36px;
+  }
+  .pane-head h2 { margin: 0; font-size: 16px; font-weight: 700; }
+  .pane-head button { padding: 6px 10px; font-size: 13.5px; }
+  textarea {
+    width: 100%;
+    min-height: 360px;
+    resize: vertical;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #fbfbfc;
+    color: var(--text);
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 14.5px;
+    line-height: 1.6;
+    padding: 12px 14px;
+  }
+  textarea:focus { border-color: var(--accent); background: #fff; }
+  textarea[readonly] { background: #f7f8fa; }
+
+  /* Stats + footer actions */
+  .statbar {
+    padding: 14px 16px;
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px;
+    margin-bottom: 16px;
+  }
+  .stats { display: flex; flex-wrap: wrap; gap: 6px 28px; }
+  .stat-group { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .stat-group strong { font-size: 14px; color: var(--muted); font-weight: 700; min-width: 52px; }
+  .stat { font-size: 14.5px; color: var(--muted); }
+  .stat b { color: var(--text); font-variant-numeric: tabular-nums; font-weight: 700; }
+  .bar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .status { min-height: 22px; margin: 0 0 24px; text-align: center; font-size: 14.5px; color: var(--muted); }
+
+  /* Info sections */
+  .info { padding: 28px; margin-top: 20px; }
+  .info h2 { margin: 0 0 18px; font-size: 22px; letter-spacing: -0.01em; }
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; counter-reset: step; }
+  .steps li {
+    counter-increment: step;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    background: #fbfbfc;
+  }
+  .steps li::before {
+    content: counter(step);
+    display: grid; place-items: center;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-weight: 700; font-size: 14px;
+    margin-bottom: 10px;
+  }
+  .steps h3 { margin: 0 0 4px; font-size: 16px; }
+  .steps p { margin: 0; color: var(--muted); font-size: 15px; }
+  .privacy { margin: 18px 0 0; padding: 12px 14px; border-radius: 8px; background: var(--accent-soft); font-size: 15px; }
+
+  details { border-top: 1px solid var(--border); }
+  details:first-of-type { border-top: 0; }
+  summary {
+    cursor: pointer; list-style: none; padding: 14px 0; font-weight: 700; font-size: 16px;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; font-size: 22px; font-weight: 400; color: var(--muted); line-height: 1; }
+  details[open] summary::after { content: "\2212"; }
+  details p { margin: 0 0 16px; color: var(--muted); max-width: 80ch; }
+
+  footer { text-align: center; color: var(--muted); font-size: 14px; padding: 8px 20px 36px; }
+
+  @media (max-width: 800px) {
+    .editor { grid-template-columns: 1fr; }
+    textarea { min-height: 240px; }
+    .steps { grid-template-columns: 1fr; }
+    .info { padding: 20px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html" aria-label="Back to home">
+      <span class="brand-mark" aria-hidden="true">T</span>
+      BurlPDF
+    </a>
+    <a class="back-link" href="index.html">&larr; Back to all tools</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Text Cleaner</h1>
+    <p>Fix messy text in one click. Everything runs in your browser, so your text is never uploaded anywhere.</p>
+  </section>
+
+  <section class="card toolbar" aria-labelledby="tools-label">
+    <p class="toolbar-label" id="tools-label">Choose an action to clean the text in the input box</p>
+    <div class="actions" role="group" aria-labelledby="tools-label">
+      <button type="button" data-op="trim">Trim Extra Spaces</button>
+      <button type="button" data-op="blank">Remove Blank Lines</button>
+      <button type="button" data-op="dupes">Remove Duplicate Lines</button>
+      <button type="button" data-op="upper">UPPERCASE</button>
+      <button type="button" data-op="lower">lowercase</button>
+      <button type="button" data-op="title">Title Case</button>
+      <button type="button" data-op="strip">Strip Line Breaks</button>
+    </div>
+  </section>
+
+  <section class="editor">
+    <div class="card pane">
+      <div class="pane-head">
+        <h2><label for="input">Input</label></h2>
+      </div>
+      <textarea id="input" spellcheck="false" placeholder="Paste or type your text here…"></textarea>
+    </div>
+    <div class="card pane">
+      <div class="pane-head">
+        <h2><label for="output">Output</label></h2>
+        <button type="button" id="reuse" class="ghost" disabled>Use output as input</button>
+      </div>
+      <textarea id="output" readonly spellcheck="false" placeholder="Your cleaned text appears here."></textarea>
+    </div>
+  </section>
+
+  <section class="card statbar" aria-label="Text statistics">
+    <div class="stats" aria-live="polite">
+      <div class="stat-group">
+        <strong>Input</strong>
+        <span class="stat"><b id="in-chars">0</b> characters</span>
+        <span class="stat"><b id="in-words">0</b> words</span>
+        <span class="stat"><b id="in-lines">0</b> lines</span>
+      </div>
+      <div class="stat-group">
+        <strong>Output</strong>
+        <span class="stat"><b id="out-chars">0</b> characters</span>
+        <span class="stat"><b id="out-words">0</b> words</span>
+        <span class="stat"><b id="out-lines">0</b> lines</span>
+      </div>
+    </div>
+    <div class="bar-actions">
+      <button type="button" id="copy" class="primary" disabled>Copy Output</button>
+      <button type="button" id="clear">Clear</button>
+    </div>
+  </section>
+
+  <p class="status" id="status" role="status" aria-live="polite"></p>
+
+  <section class="card info" aria-labelledby="how-title">
+    <h2 id="how-title">How it works</h2>
+    <ol class="steps">
+      <li>
+        <h3>Paste your text</h3>
+        <p>Type or paste anything into the input box. The stats bar updates as you go.</p>
+      </li>
+      <li>
+        <h3>Pick an action</h3>
+        <p>Click a button to clean the text. The result appears in the output box and your input stays untouched.</p>
+      </li>
+      <li>
+        <h3>Copy the result</h3>
+        <p>Click Copy Output. To apply another action to the result, choose Use output as input first.</p>
+      </li>
+    </ol>
+    <p class="privacy"><strong>Private by design:</strong> all processing happens in your browser with JavaScript. Nothing is sent to a server.</p>
+  </section>
+
+  <section class="card info" aria-labelledby="faq-title">
+    <h2 id="faq-title">Frequently asked questions</h2>
+    <details>
+      <summary>Is my text uploaded or stored anywhere?</summary>
+      <p>No. The page does all the work on your device and makes no network requests with your text. Close the tab and it’s gone.</p>
+    </details>
+    <details>
+      <summary>What does Trim Extra Spaces do?</summary>
+      <p>It removes spaces and tabs at the start and end of every line and turns runs of multiple spaces into a single space. Line breaks stay where they are.</p>
+    </details>
+    <details>
+      <summary>How does Remove Duplicate Lines decide what is a duplicate?</summary>
+      <p>A line is a duplicate if an earlier line matches it exactly, including capitalization. The first occurrence stays and the order of your lines is preserved.</p>
+    </details>
+    <details>
+      <summary>What is the difference between Remove Blank Lines and Strip Line Breaks?</summary>
+      <p>Remove Blank Lines deletes only the empty lines and keeps the rest on separate lines. Strip Line Breaks joins everything into one paragraph, separating the former lines with a single space.</p>
+    </details>
+    <details>
+      <summary>How does Title Case work?</summary>
+      <p>It capitalizes the first letter of every word and lowercases the rest. It doesn’t follow style-guide rules for small words such as “of” or “the”, so adjust those by hand if you need them.</p>
+    </details>
+    <details>
+      <summary>Is there a size limit?</summary>
+      <p>There’s no fixed limit. Very large texts, such as several million characters, depend on your device’s memory and may feel slower.</p>
+    </details>
+  </section>
+</main>
+
+<footer>Text Cleaner &middot; Free, private and works offline once loaded.</footer>
+
+<script>
+(function () {
+  var input = document.getElementById('input');
+  var output = document.getElementById('output');
+  var copyBtn = document.getElementById('copy');
+  var clearBtn = document.getElementById('clear');
+  var reuseBtn = document.getElementById('reuse');
+  var statusEl = document.getElementById('status');
+  var copyTimer = null;
+
+  function norm(t) { return t.replace(/\r\n?/g, '\n'); }
+
+  var ops = {
+    trim: function (t) {
+      return norm(t).split('\n').map(function (l) {
+        return l.replace(/[ \t\u00a0]+/g, ' ').trim();
+      }).join('\n');
+    },
+    blank: function (t) {
+      return norm(t).split('\n').filter(function (l) { return l.trim() !== ''; }).join('\n');
+    },
+    dupes: function (t) {
+      var seen = new Set();
+      return norm(t).split('\n').filter(function (l) {
+        if (seen.has(l)) return false;
+        seen.add(l);
+        return true;
+      }).join('\n');
+    },
+    upper: function (t) { return t.toUpperCase(); },
+    lower: function (t) { return t.toLowerCase(); },
+    title: function (t) {
+      return t.toLowerCase().replace(/(^|[\s(\["\u201c\-\/])(\p{L})/gu, function (m, pre, ch) {
+        return pre + ch.toUpperCase();
+      });
+    },
+    strip: function (t) {
+      return norm(t).replace(/\s*\n+\s*/g, ' ').replace(/[ \t]{2,}/g, ' ').trim();
+    }
+  };
+
+  function counts(t) {
+    var words = t.match(/\S+/g);
+    return {
+      chars: t.length,
+      words: words ? words.length : 0,
+      lines: t === '' ? 0 : t.split(/\r\n|\r|\n/).length
+    };
+  }
+
+  function fmt(n) { return n.toLocaleString(); }
+
+  function update() {
+    var a = counts(input.value), b = counts(output.value);
+    document.getElementById('in-chars').textContent = fmt(a.chars);
+    document.getElementById('in-words').textContent = fmt(a.words);
+    document.getElementById('in-lines').textContent = fmt(a.lines);
+    document.getElementById('out-chars').textContent = fmt(b.chars);
+    document.getElementById('out-words').textContent = fmt(b.words);
+    document.getElementById('out-lines').textContent = fmt(b.lines);
+    var has = output.value.length > 0;
+    copyBtn.disabled = !has;
+    reuseBtn.disabled = !has;
+  }
+
+  function say(msg) { statusEl.textContent = msg; }
+
+  function resetCopyLabel() {
+    clearTimeout(copyTimer);
+    copyBtn.textContent = 'Copy Output';
+    copyBtn.classList.remove('done');
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-op]'), function (btn) {
+    btn.addEventListener('click', function () {
+      if (!input.value.trim()) {
+        say('Paste or type some text into the input box first.');
+        input.focus();
+        return;
+      }
+      output.value = ops[btn.getAttribute('data-op')](input.value);
+      resetCopyLabel();
+      update();
+      say(btn.textContent.trim() + ' applied.');
+    });
+  });
+
+  input.addEventListener('input', update);
+
+  reuseBtn.addEventListener('click', function () {
+    input.value = output.value;
+    output.value = '';
+    resetCopyLabel();
+    update();
+    say('Output moved to input. Choose another action.');
+    input.focus();
+  });
+
+  function showCopied() {
+    copyBtn.textContent = 'Copied!';
+    copyBtn.classList.add('done');
+    say('Output copied to your clipboard.');
+    clearTimeout(copyTimer);
+    copyTimer = setTimeout(resetCopyLabel, 2000);
+  }
+
+  function fallbackCopy() {
+    output.removeAttribute('readonly');
+    output.select();
+    output.setSelectionRange(0, output.value.length);
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    output.setAttribute('readonly', '');
+    output.setSelectionRange(0, 0);
+    if (ok) { showCopied(); } else { say('Copy failed. Select the output text and press Ctrl+C (Cmd+C on Mac).'); }
+  }
+
+  copyBtn.addEventListener('click', function () {
+    if (!output.value) return;
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(output.value).then(showCopied, fallbackCopy);
+    } else {
+      fallbackCopy();
+    }
+  });
+
+  clearBtn.addEventListener('click', function () {
+    input.value = '';
+    output.value = '';
+    resetCopyLabel();
+    update();
+    say('Cleared.');
+    input.focus();
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>

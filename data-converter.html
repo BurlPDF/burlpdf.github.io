@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Converter – JSON, CSV and TSV</title>
+<meta name="description" content="Convert between JSON, CSV and TSV in your browser. Nothing is uploaded.">
+<style>
+:root{
+  --bg:#f4f5f7; --card:#fff; --border:#e2e5ea; --text:#26292f; --muted:#6b7280;
+  --accent:#e5322d; --accent-dark:#c92722; --accent-tint:#fdecea;
+  --ok:#157f3b; --ok-tint:#e8f6ed; --err:#b42318; --err-tint:#fef3f2; --err-border:#fda29b;
+  --radius:14px; --radius-sm:8px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+a{color:var(--accent-dark)}
+:focus-visible{outline:3px solid rgba(229,50,45,.45);outline-offset:2px}
+
+/* Navbar */
+.nav{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.nav-inner{max-width:1120px;margin:0 auto;padding:0 20px;height:62px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;color:var(--text);text-decoration:none;letter-spacing:-.01em}
+.brand-mark{width:30px;height:30px;border-radius:8px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:17px;line-height:1}
+.nav-link{color:var(--text);text-decoration:none;font-weight:600;font-size:15px;padding:8px 14px;border-radius:var(--radius-sm)}
+.nav-link:hover{background:var(--bg)}
+
+/* Layout */
+main{max-width:1120px;margin:0 auto;padding:36px 20px 64px}
+.hero{text-align:center;margin-bottom:28px}
+.hero h1{margin:0 0 8px;font-size:clamp(28px,4.4vw,40px);line-height:1.15;letter-spacing:-.02em}
+.hero p{margin:0 auto;max-width:620px;color:var(--muted);font-size:18px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.card + .card{margin-top:20px}
+.card h2{margin:0 0 14px;font-size:20px;letter-spacing:-.01em}
+
+/* Direction selector */
+.modes{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.mode{appearance:none;border:1px solid var(--border);background:#fff;color:var(--text);font:inherit;font-weight:600;font-size:15px;padding:9px 16px;border-radius:999px;cursor:pointer}
+.mode:hover{border-color:#c9ced6;background:#fafbfc}
+.mode[aria-pressed="true"]{background:var(--accent-tint);border-color:var(--accent);color:var(--accent-dark)}
+.options{display:flex;flex-wrap:wrap;gap:8px 22px;margin-bottom:16px;min-height:24px}
+.options label{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--text);cursor:pointer}
+.options input{width:17px;height:17px;accent-color:var(--accent)}
+[hidden]{display:none!important}
+
+/* Panels */
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.panel{border:1px solid var(--border);border-radius:12px;background:#fff;display:flex;flex-direction:column;min-width:0}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px 10px 16px;border-bottom:1px solid var(--border);background:#fafbfc;border-radius:12px 12px 0 0}
+.panel-head h3{margin:0;font-size:15px;font-weight:700}
+.panel-tools{display:flex;gap:6px;flex-wrap:wrap}
+textarea{display:block;width:100%;min-height:340px;resize:vertical;border:0;padding:14px 16px;font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;color:var(--text);background:#fff;border-radius:0 0 12px 12px;tab-size:4}
+textarea:focus-visible{outline-offset:-3px}
+textarea.drag{background:var(--accent-tint)}
+#output{background:#fcfcfd}
+
+/* Buttons */
+.btn{appearance:none;border:1px solid var(--border);background:#fff;color:var(--text);font:inherit;font-weight:600;font-size:14px;padding:8px 14px;border-radius:var(--radius-sm);cursor:pointer;white-space:nowrap}
+.btn:hover:not(:disabled){background:var(--bg);border-color:#c9ced6}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-size:16px;padding:12px 28px}
+.btn.primary:hover:not(:disabled){background:var(--accent-dark);border-color:var(--accent-dark)}
+.btn.small{padding:6px 11px;font-size:13px}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px}
+.spacer{flex:1}
+
+/* Status */
+.status{margin-top:14px;border-radius:var(--radius-sm);padding:11px 14px;font-size:15px}
+.status.ok{background:var(--ok-tint);color:var(--ok);border:1px solid #b7e4c7}
+.status.err{background:var(--err-tint);color:var(--err);border:1px solid var(--err-border)}
+.status strong{font-weight:700}
+.privacy{margin:14px 0 0;color:var(--muted);font-size:14px}
+
+/* Info sections */
+.steps{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.steps li{border:1px solid var(--border);border-radius:12px;padding:16px;background:#fafbfc}
+.steps b{display:block;margin-bottom:4px}
+.steps span{color:var(--muted);font-size:15px}
+.step-n{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:14px;font-weight:700;margin-bottom:10px}
+details{border:1px solid var(--border);border-radius:10px;background:#fff}
+details + details{margin-top:10px}
+summary{cursor:pointer;font-weight:600;padding:14px 16px;list-style:none;display:flex;justify-content:space-between;gap:12px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-size:20px;line-height:1;color:var(--muted)}
+details[open] summary::after{content:"–"}
+details p{margin:0;padding:0 16px 16px;color:var(--muted);max-width:80ch}
+code{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:1px 5px;font-size:.9em}
+footer{text-align:center;color:var(--muted);font-size:14px;padding-bottom:36px}
+
+@media (max-width:860px){
+  .panels{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr}
+  textarea{min-height:260px}
+}
+@media (max-width:520px){
+  main{padding-top:24px}
+  .card{padding:16px}
+  .btn.primary{width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">⇄</span>BurlPDF</a>
+    <a class="nav-link" href="index.html">← Back to home</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Convert JSON, CSV and TSV</h1>
+    <p>Paste your data or upload a file, pick a direction and convert. Everything runs in your browser, so nothing is ever uploaded.</p>
+  </section>
+
+  <section class="card" aria-labelledby="tool-title">
+    <h2 id="tool-title">Choose a conversion</h2>
+    <div class="modes" id="modes" role="group" aria-label="Conversion direction">
+      <button type="button" class="mode" data-mode="json2csv" aria-pressed="true">JSON to CSV</button>
+      <button type="button" class="mode" data-mode="json2tsv" aria-pressed="false">JSON to TSV</button>
+      <button type="button" class="mode" data-mode="csv2json" aria-pressed="false">CSV to JSON</button>
+      <button type="button" class="mode" data-mode="tsv2json" aria-pressed="false">TSV to JSON</button>
+      <button type="button" class="mode" data-mode="csv2tsv" aria-pressed="false">CSV to TSV</button>
+    </div>
+    <div class="options">
+      <label id="optFlattenWrap"><input type="checkbox" id="optFlatten" checked> Flatten nested objects (address.city)</label>
+      <label id="optTypesWrap" hidden><input type="checkbox" id="optTypes" checked> Convert numbers, true and false</label>
+    </div>
+
+    <div class="panels">
+      <div class="panel">
+        <div class="panel-head">
+          <h3 id="inLabel">Input (JSON)</h3>
+          <div class="panel-tools">
+            <button type="button" class="btn small" id="sampleBtn">Load sample</button>
+            <button type="button" class="btn small" id="uploadBtn">Upload file</button>
+            <button type="button" class="btn small" id="clearBtn">Clear</button>
+            <input type="file" id="fileInput" accept=".json,.csv,.tsv,.txt,text/plain,text/csv,application/json" hidden>
+          </div>
+        </div>
+        <textarea id="input" spellcheck="false" aria-labelledby="inLabel" autocomplete="off" autocapitalize="off"></textarea>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3 id="outLabel">Output (CSV)</h3>
+          <div class="panel-tools">
+            <button type="button" class="btn small" id="copyBtn" disabled>Copy Output</button>
+            <button type="button" class="btn small" id="downloadBtn" disabled>Download File</button>
+          </div>
+        </div>
+        <textarea id="output" readonly spellcheck="false" aria-labelledby="outLabel" placeholder="Your converted data will appear here."></textarea>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn primary" id="convertBtn">Convert</button>
+      <span class="spacer"></span>
+    </div>
+    <div id="status" aria-live="polite"></div>
+    <p class="privacy">Files are read with your browser and never leave this device.</p>
+  </section>
+
+  <section class="card" aria-labelledby="how-title">
+    <h2 id="how-title">How it works</h2>
+    <ol class="steps">
+      <li><span class="step-n">1</span><b>Add your data</b><span>Paste text, drop in a .json, .csv, .tsv or .txt file, or load the sample to try it out.</span></li>
+      <li><span class="step-n">2</span><b>Pick a direction</b><span>Choose JSON to CSV, JSON to TSV, CSV to JSON, TSV to JSON or CSV to TSV, then select Convert.</span></li>
+      <li><span class="step-n">3</span><b>Copy or download</b><span>Copy the result or download it with the right extension (.csv, .tsv or .json) already set.</span></li>
+    </ol>
+  </section>
+
+  <section class="card" aria-labelledby="faq-title">
+    <h2 id="faq-title">FAQ</h2>
+    <details>
+      <summary>Is my data uploaded anywhere?</summary>
+      <p>No. Parsing and conversion are done by JavaScript running in this page. Your text and files are never sent to a server, and the tool keeps working if you go offline after the page has loaded.</p>
+    </details>
+    <details>
+      <summary>What JSON shape can I convert to CSV or TSV?</summary>
+      <p>An array of objects, such as <code>[{"name":"Asha","city":"Mumbai"}]</code>, or a single object, which becomes one row. Columns are the combined keys of all objects, so objects with missing keys leave empty cells.</p>
+    </details>
+    <details>
+      <summary>How are nested objects and arrays handled?</summary>
+      <p>With “Flatten nested objects” on, <code>{"address":{"city":"Pune"}}</code> becomes a column named <code>address.city</code>. Arrays, and nested objects when flattening is off, are written into the cell as JSON text.</p>
+    </details>
+    <details>
+      <summary>Does my CSV or TSV need a header row?</summary>
+      <p>Yes. The first row supplies the property names for the JSON output. Quoted values, commas or tabs inside quotes, doubled quotes and line breaks inside quotes are all supported.</p>
+    </details>
+    <details>
+      <summary>Why did I get an error?</summary>
+      <p>The message names the line or column where the problem was found. Common causes are a missing comma or quote in JSON, an unclosed quoted value in CSV, or a row with more values than the header has columns.</p>
+    </details>
+    <details>
+      <summary>How large a file can I convert?</summary>
+      <p>Files of several megabytes convert in a moment on most devices. Very large files depend on your device’s memory, since everything is processed locally.</p>
+    </details>
+  </section>
+</main>
+
+<footer>BurlPDF · Runs locally in your browser</footer>
+
+<script>
+(function(){
+  'use strict';
+
+  var MODES = {
+    json2csv:{from:'JSON',to:'CSV', ext:'csv', mime:'text/csv'},
+    json2tsv:{from:'JSON',to:'TSV', ext:'tsv', mime:'text/tab-separated-values'},
+    csv2json:{from:'CSV', to:'JSON',ext:'json',mime:'application/json'},
+    tsv2json:{from:'TSV', to:'JSON',ext:'json',mime:'application/json'},
+    csv2tsv: {from:'CSV', to:'TSV', ext:'tsv', mime:'text/tab-separated-values'}
+  };
+  var mode = 'json2csv';
+  var fileBase = 'converted';
+
+  var $ = function(id){ return document.getElementById(id); };
+  var inEl = $('input'), outEl = $('output'), statusEl = $('status');
+  var copyBtn = $('copyBtn'), downloadBtn = $('downloadBtn');
+
+  /* ---------- Sample data ---------- */
+  var SAMPLE_ROWS = [
+    ['id','name','city','plan','seats','active','note'],
+    [1,'Asha Verma','Mumbai','Pro',5,'true','Prefers email, not calls'],
+    [2,"Liam O'Connor",'Dublin','Free',1,'false','Said "maybe later"'],
+    [3,'Mei Tanaka','Osaka','Team',12,'true','']
+  ];
+  var SAMPLE_JSON = JSON.stringify([
+    {id:1,name:'Asha Verma',plan:'Pro',seats:5,active:true,address:{city:'Mumbai',zip:'400020'},tags:['design','beta']},
+    {id:2,name:"Liam O'Connor",plan:'Free',seats:1,active:false,address:{city:'Dublin',zip:'D02'},note:'Said "maybe later"'},
+    {id:3,name:'Mei Tanaka',plan:'Team',seats:12,active:true,address:{city:'Osaka',zip:'530-0001'},tags:[]}
+  ], null, 2);
+
+  /* ---------- Parsing helpers ---------- */
+  function parseDelimited(text, d){
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    var rows = [], lines = [], row = [], f = '', q = false, fs = true;
+    var i = 0, n = text.length, line = 1, rowLine = 1, qLine = 0, c;
+    while (i < n){
+      c = text.charAt(i);
+      if (q){
+        if (c === '"'){
+          if (text.charAt(i+1) === '"'){ f += '"'; i += 2; continue; }
+          q = false; i++; continue;
+        }
+        if (c === '\n') line++;
+        f += c; i++;
+      } else if (c === '"' && fs){
+        q = true; qLine = line; fs = false; i++;
+      } else if (c === d){
+        row.push(f); f = ''; fs = true; i++;
+      } else if (c === '\n' || c === '\r'){
+        if (c === '\r' && text.charAt(i+1) === '\n') i++;
+        row.push(f); rows.push(row); lines.push(rowLine);
+        row = []; f = ''; fs = true; i++; line++; rowLine = line;
+      } else {
+        f += c; fs = false; i++;
+      }
+    }
+    if (q) throw new Error('Line ' + qLine + ': a quoted value is never closed. Add the missing closing quote (").');
+    if (f !== '' || row.length){ row.push(f); rows.push(row); lines.push(rowLine); }
+    var outRows = [], outLines = [];
+    for (var r = 0; r < rows.length; r++){
+      if (rows[r].length === 1 && rows[r][0] === '') continue; /* skip blank lines */
+      outRows.push(rows[r]); outLines.push(lines[r]);
+    }
+    return {rows:outRows, lines:outLines};
+  }
+
+  function delimiterFor(kind){ return kind === 'TSV' ? '\t' : ','; }
+
+  function toRecords(text, kind, convertTypes){
+    var d = delimiterFor(kind), name = kind === 'TSV' ? 'tab' : 'comma';
+    var p = parseDelimited(text, d);
+    if (!p.rows.length) throw new Error('The input has no rows. Add a header row followed by at least one row of data.');
+    var seen = {}, headers = p.rows[0].map(function(h, idx){
+      var base = h.trim() || ('column_' + (idx + 1)), key = base, k = 2;
+      while (seen[key]) key = base + '_' + (k++);
+      seen[key] = true; return key;
+    });
+    var records = [];
+    for (var r = 1; r < p.rows.length; r++){
+      var vals = p.rows[r];
+      if (vals.length > headers.length){
+        throw new Error('Line ' + p.lines[r] + ': found ' + vals.length + ' values but the header has ' + headers.length +
+          ' columns. Check for an extra ' + name + ' or a missing quote around a value.');
+      }
+      var obj = {};
+      for (var c = 0; c < headers.length; c++){
+        var v = c < vals.length ? vals[c] : '';
+        obj[headers[c]] = convertTypes ? infer(v) : v;
+      }
+      records.push(obj);
+    }
+    if (!records.length) throw new Error('Only a header row was found. Add at least one row of data below it.');
+    return {records:records, columns:headers.length};
+  }
+
+  function infer(v){
+    if (v === 'true') return true;
+    if (v === 'false') return false;
+    if (/^-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?$/.test(v)){
+      var digits = v.replace(/[^0-9]/g, '').length;
+      var num = Number(v);
+      if (isFinite(num) && digits <= 15) return num;
+    }
+    return v;
+  }
+
+  function jsonError(e, src){
+    var m = (e && e.message) ? e.message : 'Unknown syntax error';
+    var hint = ' Check for missing commas, unquoted keys, single quotes or trailing commas.';
+    if (/line \d+/i.test(m)) return 'Invalid JSON: ' + m + '.' + hint;
+    var p = m.match(/position (\d+)/);
+    if (p){
+      var before = src.slice(0, +p[1]).split('\n');
+      return 'Invalid JSON at line ' + before.length + ', column ' + (before[before.length-1].length + 1) + ': ' +
+        m.replace(/\s*\(line.*$/i, '') + '.' + hint;
+    }
+    return 'Invalid JSON: ' + m + '.' + hint;
+  }
+
+  function isPlainObject(v){ return v !== null && typeof v === 'object' && !Array.isArray(v); }
+
+  function flatten(obj, prefix, out){
+    Object.keys(obj).forEach(function(k){
+      var v = obj[k], key = prefix ? prefix + '.' + k : k;
+      if (isPlainObject(v) && Object.keys(v).length) flatten(v, key, out);
+      else out[key] = v;
+    });
+    return out;
+  }
+
+  function cellText(v){
+    if (v === null || v === undefined) return '';
+    if (typeof v === 'object') return JSON.stringify(v);
+    return String(v);
+  }
+
+  function jsonToTable(src, doFlatten){
+    var data;
+    try { data = JSON.parse(src); } catch (e) { throw new Error(jsonError(e, src)); }
+    var items = Array.isArray(data) ? data : (isPlainObject(data) ? [data] : null);
+    if (!items) throw new Error('JSON to CSV or TSV needs an array of objects, such as [{"name":"Asha"}]. The input is a single ' + (data === null ? 'null value' : typeof data) + '.');
+    if (!items.length) throw new Error('The JSON array is empty, so there’s nothing to convert.');
+    var keys = [], seen = {}, flat = [];
+    items.forEach(function(item, idx){
+      if (!isPlainObject(item)) throw new Error('Item ' + (idx + 1) + ' of the array is not an object. Every item must look like {"key":"value"}.');
+      var o = doFlatten ? flatten(item, '', {}) : item;
+      flat.push(o);
+      Object.keys(o).forEach(function(k){ if (!seen[k]){ seen[k] = true; keys.push(k); } });
+    });
+    if (!keys.length) throw new Error('The objects have no keys, so there are no columns to write.');
+    var rows = [keys];
+    flat.forEach(function(o){ rows.push(keys.map(function(k){ return cellText(o[k]); })); });
+    return rows;
+  }
+
+  function encodeDelimited(rows, d){
+    return rows.map(function(row){
+      return row.map(function(v){
+        var s = String(v);
+        return (s.indexOf(d) > -1 || /["\r\n]/.test(s)) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      }).join(d);
+    }).join('\n') + '\n';
+  }
+
+  /* ---------- UI helpers ---------- */
+  function setStatus(type, html){
+    statusEl.innerHTML = '';
+    if (!html) return;
+    var div = document.createElement('div');
+    div.className = 'status ' + type;
+    if (type === 'err') div.setAttribute('role', 'alert');
+    div.innerHTML = html;
+    statusEl.appendChild(div);
+  }
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function showError(msg){ setStatus('err', '<strong>Couldn’t convert.</strong> ' + esc(msg)); }
+  function refreshButtons(){ var has = outEl.value.length > 0; copyBtn.disabled = !has; downloadBtn.disabled = !has; }
+
+  function applyMode(m){
+    mode = m;
+    var cfg = MODES[m];
+    Array.prototype.forEach.call(document.querySelectorAll('.mode'), function(b){
+      b.setAttribute('aria-pressed', b.getAttribute('data-mode') === m ? 'true' : 'false');
+    });
+    $('inLabel').textContent = 'Input (' + cfg.from + ')';
+    $('outLabel').textContent = 'Output (' + cfg.to + ')';
+    $('optFlattenWrap').hidden = cfg.from !== 'JSON';
+    $('optTypesWrap').hidden = cfg.to !== 'JSON';
+    inEl.placeholder = cfg.from === 'JSON'
+      ? 'Paste a JSON array of objects here, or upload a .json file.'
+      : 'Paste ' + cfg.from + ' with a header row here, or upload a .' + cfg.from.toLowerCase() + ' file.';
+    outEl.value = ''; setStatus('', ''); refreshButtons();
+  }
+
+  function sampleFor(m){
+    var from = MODES[m].from;
+    if (from === 'JSON') return SAMPLE_JSON;
+    return encodeDelimited(SAMPLE_ROWS, delimiterFor(from));
+  }
+
+  /* ---------- Conversion ---------- */
+  function convert(){
+    var src = inEl.value;
+    setStatus('', ''); outEl.value = '';
+    if (!src.trim()){
+      showError('There’s no input yet. Paste some data, upload a file or select Load sample.');
+      refreshButtons(); return;
+    }
+    try {
+      var cfg = MODES[mode], text, rowCount, colCount;
+      if (cfg.from === 'JSON'){
+        var rows = jsonToTable(src, $('optFlatten').checked);
+        text = encodeDelimited(rows, delimiterFor(cfg.to));
+        rowCount = rows.length - 1; colCount = rows[0].length;
+      } else if (cfg.to === 'JSON'){
+        var res = toRecords(src, cfg.from, $('optTypes').checked);
+        text = JSON.stringify(res.records, null, 2) + '\n';
+        rowCount = res.records.length; colCount = res.columns;
+      } else {
+        var parsed = parseDelimited(src, ',');
+        if (!parsed.rows.length) throw new Error('The input has no rows to convert.');
+        text = encodeDelimited(parsed.rows, '\t');
+        rowCount = parsed.rows.length - 1; colCount = parsed.rows[0].length;
+      }
+      outEl.value = text;
+      setStatus('ok', '<strong>Done.</strong> ' + rowCount + ' ' + (rowCount === 1 ? 'row' : 'rows') + ' and ' +
+        colCount + ' ' + (colCount === 1 ? 'column' : 'columns') + ' converted to ' + cfg.to + '.');
+    } catch (e) {
+      showError(e.message);
+    }
+    refreshButtons();
+  }
+
+  /* ---------- Files ---------- */
+  function guessMode(name, text){
+    var ext = (name.split('.').pop() || '').toLowerCase(), type;
+    if (ext === 'json') type = 'JSON';
+    else if (ext === 'csv') type = 'CSV';
+    else if (ext === 'tsv') type = 'TSV';
+    else {
+      var t = text.replace(/^\uFEFF/, '').trim(), first = t.split(/\r?\n/)[0] || '';
+      type = /^[\[{]/.test(t) ? 'JSON' : (first.indexOf('\t') > -1 ? 'TSV' : 'CSV');
+    }
+    if (MODES[mode].from === type) return mode;
+    return type === 'JSON' ? 'json2csv' : (type === 'CSV' ? 'csv2json' : 'tsv2json');
+  }
+
+  function loadFile(file){
+    if (!file) return;
+    if (!/\.(json|csv|tsv|txt)$/i.test(file.name)){
+      showError('“' + file.name + '” isn’t supported. Choose a .json, .csv, .tsv or .txt file.');
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(){
+      var text = String(reader.result || '');
+      fileBase = file.name.replace(/\.[^.]+$/, '') || 'converted';
+      applyMode(guessMode(file.name, text));
+      inEl.value = text;
+      convert();
+    };
+    reader.onerror = function(){ showError('The file couldn’t be read. Try again or paste its contents instead.'); };
+    reader.readAsText(file);
+  }
+
+  /* ---------- Events ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('.mode'), function(b){
+    b.addEventListener('click', function(){ applyMode(b.getAttribute('data-mode')); });
+  });
+  $('convertBtn').addEventListener('click', convert);
+  $('sampleBtn').addEventListener('click', function(){ fileBase = 'sample'; inEl.value = sampleFor(mode); convert(); });
+  $('clearBtn').addEventListener('click', function(){ inEl.value = ''; outEl.value = ''; fileBase = 'converted'; setStatus('', ''); refreshButtons(); inEl.focus(); });
+  $('uploadBtn').addEventListener('click', function(){ $('fileInput').click(); });
+  $('fileInput').addEventListener('change', function(e){ loadFile(e.target.files[0]); e.target.value = ''; });
+
+  inEl.addEventListener('dragover', function(e){ e.preventDefault(); inEl.classList.add('drag'); });
+  inEl.addEventListener('dragleave', function(){ inEl.classList.remove('drag'); });
+  inEl.addEventListener('drop', function(e){
+    e.preventDefault(); inEl.classList.remove('drag');
+    if (e.dataTransfer && e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]);
+  });
+
+  var copyTimer;
+  copyBtn.addEventListener('click', function(){
+    var text = outEl.value;
+    function done(){
+      copyBtn.textContent = 'Copied';
+      clearTimeout(copyTimer);
+      copyTimer = setTimeout(function(){ copyBtn.textContent = 'Copy Output'; }, 1600);
+    }
+    function fallback(){
+      outEl.focus(); outEl.select();
+      try { if (document.execCommand('copy')) done(); else showError('Copying was blocked by the browser. Select the output and copy it manually.'); }
+      catch (err) { showError('Copying was blocked by the browser. Select the output and copy it manually.'); }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, fallback);
+    } else { fallback(); }
+  });
+
+  downloadBtn.addEventListener('click', function(){
+    var cfg = MODES[mode];
+    var blob = new Blob([outEl.value], {type: cfg.mime + ';charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = fileBase + '.' + cfg.ext;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  });
+
+  applyMode('json2csv');
+})();
+</script>
+</body>
+</html>

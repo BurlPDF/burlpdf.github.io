@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compress Image – Free, Private, In Your Browser</title>
+<meta name="description" content="Compress JPG, PNG and WEBP images directly in your browser. Nothing is uploaded to a server.">
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --border: #e3e6ea;
+    --text: #1f2933;
+    --muted: #66707c;
+    --accent: #e5322d;
+    --accent-dark: #c92721;
+    --accent-soft: #fdeceb;
+    --ok: #1e8a4c;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid rgba(229, 50, 45, .4); outline-offset: 2px; }
+
+  /* Navbar */
+  .navbar {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .nav-inner {
+    max-width: 1100px; margin: 0 auto; padding: 0 20px;
+    height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; text-decoration: none; letter-spacing: -.02em; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 8px; background: var(--accent);
+    display: grid; place-items: center; color: #fff; font-size: 16px; font-weight: 800;
+  }
+  .nav-link {
+    text-decoration: none; font-weight: 600; font-size: 15px; color: var(--text);
+    padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border); background: #fff;
+    transition: background .15s, border-color .15s;
+  }
+  .nav-link:hover { background: var(--bg); border-color: #cfd4da; }
+
+  /* Layout */
+  main { max-width: 1000px; margin: 0 auto; padding: 40px 20px 64px; }
+  .hero { text-align: center; margin-bottom: 28px; }
+  .hero h1 { font-size: clamp(28px, 5vw, 40px); margin: 0 0 10px; letter-spacing: -.03em; line-height: 1.15; }
+  .hero p { margin: 0 auto; color: var(--muted); font-size: 17px; max-width: 560px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+    padding: 24px;
+  }
+  .card + .card { margin-top: 20px; }
+
+  /* Drop zone */
+  .dropzone {
+    border: 2px dashed #cdd2d8; border-radius: var(--radius); background: #fafbfc;
+    padding: 56px 20px; text-align: center; cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .dropzone:hover, .dropzone.drag { border-color: var(--accent); background: var(--accent-soft); }
+  .dropzone svg { width: 48px; height: 48px; color: var(--accent); margin-bottom: 10px; }
+  .dropzone h2 { margin: 0 0 6px; font-size: 20px; }
+  .dropzone p { margin: 0 0 18px; color: var(--muted); font-size: 15px; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font: inherit; font-weight: 700; font-size: 16px; color: #fff; background: var(--accent);
+    border: 0; border-radius: 10px; padding: 13px 26px; cursor: pointer; text-decoration: none;
+    transition: background .15s;
+  }
+  .btn:hover { background: var(--accent-dark); }
+  .btn:disabled { background: #c9ced4; cursor: not-allowed; }
+  .btn-ghost { background: #fff; color: var(--text); border: 1px solid var(--border); font-size: 15px; padding: 10px 18px; }
+  .btn-ghost:hover { background: var(--bg); }
+  .privacy { margin: 14px 0 0; font-size: 13px; color: var(--muted); text-align: center; }
+  .error {
+    margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: #fff1f0;
+    border: 1px solid #f5c2bf; color: #a3231d; font-size: 14px;
+  }
+  .hidden { display: none !important; }
+
+  /* Workspace */
+  .controls { display: grid; grid-template-columns: 1.3fr 1fr; gap: 28px; align-items: start; }
+  .field label, .field .lbl { display: block; font-weight: 700; font-size: 15px; margin-bottom: 8px; }
+  .slider-row { display: flex; align-items: center; gap: 14px; }
+  input[type="range"] { flex: 1; accent-color: var(--accent); height: 28px; cursor: pointer; }
+  .q-val {
+    min-width: 62px; text-align: center; font-weight: 800; font-size: 16px;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px;
+  }
+  .scale { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  select {
+    font: inherit; width: 100%; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--border);
+    background: #fff; color: var(--text); cursor: pointer;
+  }
+  .hint { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 22px; }
+  .stat { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .stat small { display: block; color: var(--muted); font-size: 13px; margin-bottom: 2px; }
+  .stat strong { font-size: 22px; letter-spacing: -.02em; }
+  .stat.saved strong { color: var(--ok); }
+  .stat.saved.bad strong { color: var(--accent-dark); }
+  .note { margin: 14px 0 0; font-size: 14px; color: #8a5a00; background: #fff8e6; border: 1px solid #f3dfa7; padding: 10px 12px; border-radius: 10px; }
+
+  .previews { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .pv h3 { margin: 0 0 10px; font-size: 15px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .pv h3 span { color: var(--muted); font-weight: 500; }
+  .frame {
+    border: 1px solid var(--border); border-radius: 12px; overflow: hidden; min-height: 180px;
+    display: grid; place-items: center; padding: 8px;
+    background-color: #fff;
+    background-image: linear-gradient(45deg, #eceef1 25%, transparent 25%, transparent 75%, #eceef1 75%),
+                      linear-gradient(45deg, #eceef1 25%, transparent 25%, transparent 75%, #eceef1 75%);
+    background-size: 16px 16px; background-position: 0 0, 8px 8px;
+  }
+  .frame img { max-width: 100%; max-height: 420px; display: block; border-radius: 4px; }
+  .frame .busy { color: var(--muted); font-size: 14px; background: #fff; padding: 6px 12px; border-radius: 8px; }
+  .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 22px; align-items: center; }
+  .fname { color: var(--muted); font-size: 14px; word-break: break-all; margin-left: auto; }
+
+  /* Content sections */
+  h2.section { font-size: 24px; letter-spacing: -.02em; margin: 0 0 16px; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 0; padding: 0; list-style: none; }
+  .steps li { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+  .steps b { display: block; margin-bottom: 4px; }
+  .steps span { color: var(--muted); font-size: 15px; }
+  details { border: 1px solid var(--border); border-radius: 12px; padding: 0 16px; background: #fff; }
+  details + details { margin-top: 10px; }
+  summary { cursor: pointer; font-weight: 700; padding: 14px 0; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; font-size: 20px; line-height: 1; color: var(--muted); }
+  details[open] summary::after { content: "\2212"; }
+  details p { margin: 0 0 14px; color: var(--muted); font-size: 15px; }
+
+  footer { text-align: center; color: var(--muted); font-size: 14px; padding: 0 20px 40px; }
+
+  @media (max-width: 760px) {
+    .controls, .previews, .steps { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr; }
+    .fname { margin-left: 0; width: 100%; }
+    main { padding-top: 28px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+
+<header class="navbar">
+  <div class="nav-inner">
+    <a class="brand" href="index.html" aria-label="Home">
+      <span class="brand-mark">&#9650;</span> BurlPDF
+    </a>
+    <a class="nav-link" href="index.html">&larr; Back to all tools</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>Compress Image</h1>
+    <p>Shrink JPG, PNG and WEBP files right in your browser. Your image never leaves your device.</p>
+  </section>
+
+  <!-- Upload -->
+  <section class="card" id="uploadCard">
+    <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose an image or drop it here">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>
+      </svg>
+      <h2>Drop your image here</h2>
+      <p>JPG, PNG or WEBP</p>
+      <button type="button" class="btn" id="pickBtn">Select image</button>
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" hidden>
+    </div>
+    <div class="error hidden" id="error" role="alert"></div>
+    <p class="privacy">&#128274; 100% private. Compression runs locally with the Canvas API, and nothing is uploaded.</p>
+  </section>
+
+  <!-- Workspace -->
+  <div id="workspace" class="hidden">
+    <section class="card">
+      <div class="controls">
+        <div class="field">
+          <label for="quality">Quality</label>
+          <div class="slider-row">
+            <input type="range" id="quality" min="10" max="95" step="1" value="70">
+            <div class="q-val" id="qVal">70%</div>
+          </div>
+          <div class="scale"><span>Smaller file</span><span>Better quality</span></div>
+        </div>
+        <div class="field">
+          <label for="format">Output format</label>
+          <select id="format">
+            <option value="auto">Same as original (PNG becomes WEBP)</option>
+            <option value="image/jpeg">JPG</option>
+            <option value="image/webp">WEBP</option>
+          </select>
+          <p class="hint" id="formatHint">PNG is lossless, so it can&rsquo;t be shrunk by a quality setting. It&rsquo;s converted to WEBP instead.</p>
+        </div>
+      </div>
+
+      <div class="stats" aria-live="polite">
+        <div class="stat"><small>Original size</small><strong id="origSize">&ndash;</strong></div>
+        <div class="stat"><small>Compressed size</small><strong id="compSize">&ndash;</strong></div>
+        <div class="stat saved" id="savedBox"><small>Saved</small><strong id="saved">&ndash;</strong></div>
+      </div>
+      <div class="note hidden" id="note"></div>
+
+      <div class="actions">
+        <button class="btn" id="downloadBtn" disabled>Download Compressed Image</button>
+        <button class="btn btn-ghost" id="resetBtn">Choose another image</button>
+        <span class="fname" id="fname"></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="previews">
+        <div class="pv">
+          <h3>Original <span id="origMeta"></span></h3>
+          <div class="frame"><img id="origImg" alt="Original image preview"></div>
+        </div>
+        <div class="pv">
+          <h3>Compressed <span id="compMeta"></span></h3>
+          <div class="frame" id="compFrame"><img id="compImg" alt="Compressed image preview"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- How it works -->
+  <section class="card" style="margin-top:32px">
+    <h2 class="section">How it works</h2>
+    <ol class="steps">
+      <li><b>1. Add your image</b><span>Drag a JPG, PNG or WEBP onto the box, or select one from your device.</span></li>
+      <li><b>2. Pick a quality</b><span>Move the slider. The compressed size and savings update as you go.</span></li>
+      <li><b>3. Download</b><span>Compare the preview with the original, then save the smaller file.</span></li>
+    </ol>
+  </section>
+
+  <!-- FAQ -->
+  <section class="card">
+    <h2 class="section">Frequently asked questions</h2>
+    <details>
+      <summary>Is my image uploaded anywhere?</summary>
+      <p>No. The image is read and re-encoded by your browser using an HTML5 canvas. It never touches a server, and it works even if you go offline after the page loads.</p>
+    </details>
+    <details>
+      <summary>What quality setting should I use?</summary>
+      <p>For photos, 70&ndash;80% usually looks nearly identical to the original at a much smaller size. Go lower for thumbnails or email attachments, and higher when fine detail matters.</p>
+    </details>
+    <details>
+      <summary>Why does my PNG turn into a WEBP?</summary>
+      <p>PNG is a lossless format, and browsers ignore the quality setting when saving one. To give you real savings, PNG files are converted to WEBP by default. WEBP also keeps transparency. You can choose JPG instead, but transparent areas will become white.</p>
+    </details>
+    <details>
+      <summary>Why is the compressed file sometimes larger?</summary>
+      <p>If the original was already heavily optimized, re-encoding it can add size. Lower the quality, or try another output format. If nothing helps, keep your original.</p>
+    </details>
+    <details>
+      <summary>Does it change the image dimensions or remove metadata?</summary>
+      <p>Width and height stay exactly the same. Metadata such as camera info and GPS location isn&rsquo;t carried over, which is a small privacy bonus.</p>
+    </details>
+  </section>
+</main>
+
+<footer>Free image compression that runs entirely in your browser.</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var MAX_BYTES = 50 * 1024 * 1024;
+  var TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+  var EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var dropzone = $('dropzone'), fileInput = $('fileInput'), errorBox = $('error');
+  var uploadCard = $('uploadCard'), workspace = $('workspace');
+  var quality = $('quality'), qVal = $('qVal'), formatSel = $('format'), formatHint = $('formatHint');
+  var origSizeEl = $('origSize'), compSizeEl = $('compSize'), savedEl = $('saved'), savedBox = $('savedBox');
+  var noteEl = $('note'), downloadBtn = $('downloadBtn'), resetBtn = $('resetBtn'), fnameEl = $('fname');
+  var origImg = $('origImg'), compImg = $('compImg'), origMeta = $('origMeta'), compMeta = $('compMeta');
+
+  var file = null, img = null, origUrl = null, compUrl = null, compBlob = null;
+  var timer = null, runId = 0;
+
+  function fmtSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(2) + ' MB';
+  }
+  function showError(msg) { errorBox.textContent = msg; errorBox.classList.remove('hidden'); }
+  function clearError() { errorBox.classList.add('hidden'); errorBox.textContent = ''; }
+  function revoke(url) { if (url) URL.revokeObjectURL(url); }
+
+  /* ---------- File intake ---------- */
+  function handleFile(f) {
+    clearError();
+    if (!f) return;
+    if (TYPES.indexOf(f.type) === -1) {
+      showError('That file type isn\u2019t supported. Please choose a JPG, PNG or WEBP image.');
+      return;
+    }
+    if (f.size > MAX_BYTES) {
+      showError('That image is larger than 50 MB. Please choose a smaller file.');
+      return;
+    }
+    var url = URL.createObjectURL(f);
+    var image = new Image();
+    image.onload = function () {
+      revoke(origUrl); revoke(compUrl);
+      compUrl = null; compBlob = null;
+      file = f; img = image; origUrl = url;
+      origImg.src = url;
+      origMeta.textContent = image.naturalWidth + ' \u00d7 ' + image.naturalHeight + ' px \u00b7 ' + fmtSize(f.size);
+      origSizeEl.textContent = fmtSize(f.size);
+      fnameEl.textContent = f.name;
+      uploadCard.classList.add('hidden');
+      workspace.classList.remove('hidden');
+      updateHint();
+      compress();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    image.onerror = function () {
+      revoke(url);
+      showError('We couldn\u2019t read that image. It may be corrupted. Try another file.');
+    };
+    image.src = url;
+  }
+
+  /* ---------- Compression ---------- */
+  function targetType() {
+    var v = formatSel.value;
+    if (v !== 'auto') return v;
+    return file.type === 'image/png' ? 'image/webp' : file.type;
+  }
+  function updateHint() {
+    if (!file) return;
+    var v = formatSel.value;
+    if (v === 'image/jpeg') formatHint.textContent = 'JPG doesn\u2019t support transparency. Transparent areas become white.';
+    else if (v === 'image/webp') formatHint.textContent = 'WEBP gives small files and keeps transparency.';
+    else if (file.type === 'image/png') formatHint.textContent = 'PNG is lossless, so it can\u2019t be shrunk by a quality setting. It\u2019s converted to WEBP instead.';
+    else formatHint.textContent = 'Keeps your original format (' + EXT[file.type].toUpperCase() + ').';
+  }
+
+  function compress() {
+    if (!img || !file) return;
+    var id = ++runId;
+    var type = targetType();
+    var q = parseInt(quality.value, 10) / 100;
+
+    downloadBtn.disabled = true;
+    compMeta.textContent = 'Working\u2026';
+
+    var canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    var ctx = canvas.getContext('2d');
+    if (type === 'image/jpeg') { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+    ctx.drawImage(img, 0, 0);
+
+    canvas.toBlob(function (blob) {
+      if (id !== runId) return; // a newer run superseded this one
+      if (!blob) { showError('Compression failed in this browser. Try a smaller image or another format.'); return; }
+      clearError();
+      compBlob = blob;
+      revoke(compUrl);
+      compUrl = URL.createObjectURL(blob);
+      compImg.src = compUrl;
+
+      var orig = file.size, comp = blob.size;
+      var pct = ((orig - comp) / orig) * 100;
+      compSizeEl.textContent = fmtSize(comp);
+      savedEl.textContent = (pct >= 0 ? '' : '+') + Math.abs(pct).toFixed(1) + '%';
+      savedBox.classList.toggle('bad', pct < 0);
+      compMeta.textContent = EXT[blob.type] ? (EXT[blob.type].toUpperCase() + ' \u00b7 ' + fmtSize(comp)) : fmtSize(comp);
+
+      var msgs = [];
+      if (blob.type !== type) msgs.push('Your browser can\u2019t save as ' + EXT[type].toUpperCase() + ', so it used ' + (EXT[blob.type] || 'another format').toUpperCase() + ' instead. Try JPG.');
+      if (pct < 0) msgs.push('The result is larger than the original. Lower the quality or switch the output format.');
+      noteEl.textContent = msgs.join(' ');
+      noteEl.classList.toggle('hidden', msgs.length === 0);
+
+      downloadBtn.disabled = false;
+    }, type, q);
+  }
+
+  function scheduleCompress() {
+    clearTimeout(timer);
+    timer = setTimeout(compress, 120);
+  }
+
+  /* ---------- Download ---------- */
+  downloadBtn.addEventListener('click', function () {
+    if (!compBlob || !file) return;
+    var base = file.name.replace(/\.[^.]+$/, '') || 'image';
+    var ext = EXT[compBlob.type] || 'img';
+    var a = document.createElement('a');
+    a.href = compUrl;
+    a.download = base + '-compressed.' + ext;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
+
+  /* ---------- Reset ---------- */
+  resetBtn.addEventListener('click', function () {
+    runId++;
+    clearTimeout(timer);
+    revoke(origUrl); revoke(compUrl);
+    origUrl = compUrl = compBlob = file = img = null;
+    origImg.removeAttribute('src'); compImg.removeAttribute('src');
+    fileInput.value = '';
+    clearError();
+    workspace.classList.add('hidden');
+    uploadCard.classList.remove('hidden');
+  });
+
+  /* ---------- Controls ---------- */
+  quality.addEventListener('input', function () {
+    qVal.textContent = quality.value + '%';
+    scheduleCompress();
+  });
+  formatSel.addEventListener('change', function () { updateHint(); compress(); });
+
+  /* ---------- Drop zone ---------- */
+  $('pickBtn').addEventListener('click', function (e) { e.stopPropagation(); fileInput.click(); });
+  dropzone.addEventListener('click', function () { fileInput.click(); });
+  dropzone.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+  });
+  fileInput.addEventListener('change', function () { handleFile(fileInput.files[0]); });
+
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    dropzone.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.add('drag'); });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    dropzone.addEventListener(ev, function (e) { e.preventDefault(); dropzone.classList.remove('drag'); });
+  });
+  dropzone.addEventListener('drop', function (e) {
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    handleFile(f);
+  });
+  // Stop the browser from navigating to a file dropped outside the zone
+  window.addEventListener('dragover', function (e) { e.preventDefault(); });
+  window.addEventListener('drop', function (e) { e.preventDefault(); });
+})();
+</script>
+</body>
+</html>
