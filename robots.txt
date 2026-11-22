@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://burlpdf.github.io/sitemap.xml
