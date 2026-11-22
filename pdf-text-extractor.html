@@ -23,7 +23,7 @@
     --ok: #15803d;
     --radius: 14px;
   }
-  * { box-sizing: border-box; }
+- { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body {
     margin: 0;
@@ -228,6 +228,7 @@
     <div class="actions">
       <button class="btn primary" id="copyBtn" type="button">Copy Text</button>
       <button class="btn" id="downloadBtn" type="button">Download .TXT</button>
+      <button class="btn" id="resetBtn" type="button">New PDF</button>
     </div>
     <div class="msg" id="outMsg" role="status"></div>
   </section>
@@ -285,7 +286,7 @@
   var optionsCard = $('optionsCard'), outputCard = $('outputCard');
   var rangeInput = $('range'), markers = $('markers');
   var extractBtn = $('extractBtn'), changeBtn = $('changeBtn');
-  var copyBtn = $('copyBtn'), downloadBtn = $('downloadBtn');
+  var copyBtn = $('copyBtn'), downloadBtn = $('downloadBtn'), resetBtn = $('resetBtn');
   var output = $('output'), counts = $('counts');
   var progress = $('progress'), bar = $('bar');
 
@@ -496,6 +497,20 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
     showMsg('outMsg', 'ok', 'Download started.');
     setTimeout(function () { hideMsg('outMsg'); }, 3500);
+  });
+
+  resetBtn.addEventListener('click', function () {
+    if (pdfDoc) { try { pdfDoc.destroy(); } catch (e) {} pdfDoc = null; }
+    currentFileName = 'extracted-text';
+    output.value = '';
+    rangeInput.value = '';
+    updateCounts();
+    hideMsg('uploadMsg'); hideMsg('optMsg'); hideMsg('outMsg');
+    optionsCard.style.display = 'none';
+    outputCard.style.display = 'none';
+    bar.style.width = '0%';
+    progress.classList.remove('show');
+    $('uploadCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
 })();
 </script>
