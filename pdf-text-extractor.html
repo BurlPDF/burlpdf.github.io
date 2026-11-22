@@ -10,6 +10,22 @@
 <meta property="og:description" content="Extract text from any PDF directly in your browser. No uploads, no servers, 100% private." />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://burlpdf.github.io/pdf-text-extractor.html" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "PDF Text Extractor – BurlPDF",
+  "url": "https://burlpdf.github.io/pdf-text-extractor.html",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any",
+  "browserRequirements": "Requires JavaScript and a modern web browser",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+</script>
 <style>
   :root {
     --bg: #f4f5f7;
@@ -196,6 +212,7 @@
         <div class="file-sub"><span id="fileSize"></span><span class="pill" id="pageCount"></span></div>
       </div>
       <button class="btn" id="changeBtn" type="button">Choose another file</button>
+      <button class="btn" id="clearOptionsBtn" type="button">Clear</button>
     </div>
     <hr style="border:0;border-top:1px solid var(--border);margin:20px 0">
     <div class="options">
@@ -285,7 +302,7 @@
   var drop = $('drop'), fileInput = $('fileInput');
   var optionsCard = $('optionsCard'), outputCard = $('outputCard');
   var rangeInput = $('range'), markers = $('markers');
-  var extractBtn = $('extractBtn'), changeBtn = $('changeBtn');
+  var extractBtn = $('extractBtn'), changeBtn = $('changeBtn'), clearOptionsBtn = $('clearOptionsBtn');
   var copyBtn = $('copyBtn'), downloadBtn = $('downloadBtn'), resetBtn = $('resetBtn');
   var output = $('output'), counts = $('counts');
   var progress = $('progress'), bar = $('bar');
@@ -304,6 +321,15 @@
     el.textContent = text;
   }
   function hideMsg(id) { var el = $(id); el.className = 'msg'; el.textContent = ''; }
+
+  function trackToolEvent(action, extraParams) {
+    if (typeof gtag !== 'function') return;
+    var params = Object.assign({
+      tool_name: 'pdf_text_extractor',
+      tool_action: action
+    }, extraParams || {});
+    gtag('event', 'burlpdf_tool_use', params);
+  }
 
   function formatSize(bytes) {
     if (bytes < 1024) return bytes + ' B';
@@ -443,6 +469,7 @@
         bar.style.width = Math.round(((i + 1) / pages.length) * 100) + '%';
       }
       output.value = parts.join('\n\n');
+      trackToolEvent('extract_text', { pages_extracted: pages.length });
       updateCounts();
       outputCard.style.display = '';
       outputCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -480,6 +507,7 @@
         output.select(); document.execCommand('copy'); output.setSelectionRange(0, 0);
       }
       showMsg('outMsg', 'ok', 'Text copied to clipboard.');
+      trackToolEvent('copy_text');
     } catch (e) {
       output.select();
       showMsg('outMsg', 'warn', 'Automatic copy was blocked. The text is selected, so press Ctrl+C (Cmd+C on Mac).');
@@ -496,6 +524,7 @@
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
     showMsg('outMsg', 'ok', 'Download started.');
+    trackToolEvent('download_txt');
     setTimeout(function () { hideMsg('outMsg'); }, 3500);
   });
 
@@ -511,6 +540,10 @@
     bar.style.width = '0%';
     progress.classList.remove('show');
     $('uploadCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+
+  clearOptionsBtn.addEventListener('click', function () {
+    resetBtn.click();
   });
 })();
 </script>
